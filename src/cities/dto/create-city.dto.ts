@@ -1,5 +1,6 @@
 import { IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsWktPoint } from '../../common/validators/wkt-point.validator';
 
 export class CreateCityDto {
   @ApiProperty({ example: 'Yerevan' })
@@ -17,6 +18,10 @@ export class CreateCityDto {
     description: 'WKT POINT in lon/lat order (SRID 4326).',
   })
   @IsString({ message: 'wktLocation must be a string' })
+  @IsWktPoint({
+    message:
+      'wktLocation must be WKT POINT(lon lat) with lon in [-180,180] and lat in [-90,90]',
+  })
   // Example: "POINT(44.5126 40.1772)" (lon lat)
   wktLocation?: string;
 }

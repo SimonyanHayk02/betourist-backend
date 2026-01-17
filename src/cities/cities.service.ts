@@ -37,6 +37,35 @@ export class CitiesService {
       orderBy: { name: 'asc' },
     });
   }
+
+  async findNearby(params: {
+    lat: number;
+    lng: number;
+    radiusMeters: number;
+    limit: number;
+  }) {
+    // Use PostGIS geography distance. Prisma returns plain objects from raw SQL.
+    return await this.prisma.$queryRaw`
+      SELECT
+        c."id",
+        c."name",
+        c."countryId",
+        ST_Distance(
+          c."location",
+          ST_SetSRID(ST_MakePoint(${params.lng}, ${params.lat}), 4326)::geography
+        ) AS "distanceMeters"
+      FROM "cities" c
+      WHERE c."deletedAt" IS NULL
+        AND c."location" IS NOT NULL
+        AND ST_DWithin(
+          c."location",
+          ST_SetSRID(ST_MakePoint(${params.lng}, ${params.lat}), 4326)::geography,
+          ${params.radiusMeters}
+        )
+      ORDER BY "distanceMeters" ASC
+      LIMIT ${params.limit};
+    `;
+  }
 }
 
 
