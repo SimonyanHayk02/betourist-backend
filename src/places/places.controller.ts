@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
@@ -13,6 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PlacesService } from './places.service';
 import { ListPlacesQueryDto } from './dto/list-places.query.dto';
 import { CreatePlaceDto } from './dto/create-place.dto';
+import { UpdatePlaceDto } from './dto/update-place.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -60,6 +62,26 @@ export class PlacesController {
     const place = await this.placesService.getAnyById(id);
     if (!place) throw new NotFoundException('Place not found');
     return place;
+  }
+
+  @ApiOperation({ summary: 'Update place (admin-only)' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
+  @Patch('admin/:id')
+  async update(@Param('id') id: string, @Body() dto: UpdatePlaceDto) {
+    const updated = await this.placesService.update(id, dto);
+    if (!updated) throw new NotFoundException('Place not found');
+    return updated;
+  }
+
+  @ApiOperation({ summary: 'Soft delete place (admin-only)' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
+  @Delete('admin/:id')
+  async softDelete(@Param('id') id: string) {
+    return await this.placesService.softDelete(id);
   }
 
   @ApiOperation({ summary: 'Create place (admin-only)' })
