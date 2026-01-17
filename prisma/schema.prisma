@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DbUserRole {
+  guest
+  tourist
+  verified_tourist
+  partner
+  partner_manager
+  city_moderator
+  country_moderator
+  platform_admin
+  super_admin
+
+  @@map("users_role_enum")
+}
+
+enum DbVerificationStatus {
+  unverified
+  email_verified
+  phone_verified
+  identity_verified
+  business_verified
+
+  @@map("users_verificationstatus_enum")
+}
+
+enum DbPartnerManagerRoleType {
+  manager
+  analyst
+  manager_analyst
+
+  @@map("users_managerroletype_enum")
+}
+
+model User {
+  id                 String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime               @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime               @updatedAt @default(now()) @db.Timestamptz(6)
+  deletedAt          DateTime?              @db.Timestamptz(6)
+
+  email              String?                @unique @db.Text
+  phone              String?                @unique @db.Text
+  passwordHash       String                 @db.Text
+  refreshTokenHash   String?                @db.Text
+
+  role               DbUserRole               @default(tourist)
+  verificationStatus DbVerificationStatus     @default(unverified)
+  isActive           Boolean                @default(true)
+  isSuspended        Boolean                @default(false)
+  suspendedUntil     DateTime?              @db.Timestamptz(6)
+
+  cityAssignments    Json                   @default("[]")
+  countryAssignments Json                   @default("[]")
+  partnerId          String?                @db.Uuid
+  managerRoleType    DbPartnerManagerRoleType?
+
+  @@map("users")
+}
+
+

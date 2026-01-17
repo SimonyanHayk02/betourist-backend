@@ -38,7 +38,10 @@ export class AuthService {
       passwordHash,
     });
 
-    const tokens = await this.issueTokens({ userId: user.id, role: user.role });
+    const tokens = await this.issueTokens({
+      userId: user.id,
+      role: user.role as unknown as UserRole,
+    });
     await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
     return tokens;
   }
@@ -57,7 +60,10 @@ export class AuthService {
     const ok = await argon2.verify(user.passwordHash, dto.password);
     if (!ok) throw new UnauthorizedException('Invalid credentials');
 
-    const tokens = await this.issueTokens({ userId: user.id, role: user.role });
+    const tokens = await this.issueTokens({
+      userId: user.id,
+      role: user.role as unknown as UserRole,
+    });
     await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
     return tokens;
   }
@@ -71,7 +77,10 @@ export class AuthService {
     const ok = await argon2.verify(user.refreshTokenHash, refreshToken);
     if (!ok) throw new UnauthorizedException('Invalid refresh token');
 
-    const tokens = await this.issueTokens({ userId: user.id, role: user.role });
+    const tokens = await this.issueTokens({
+      userId: user.id,
+      role: user.role as unknown as UserRole,
+    });
     await this.storeRefreshTokenHash(user.id, tokens.refreshToken);
     return tokens;
   }
