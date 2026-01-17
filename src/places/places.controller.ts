@@ -15,6 +15,7 @@ import { PlacesService } from './places.service';
 import { ListPlacesQueryDto } from './dto/list-places.query.dto';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
+import { ListPlacesAdminQueryDto } from './dto/list-places-admin.query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -41,7 +42,7 @@ export class PlacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Get('admin')
-  async listAdmin(@Query() query: ListPlacesQueryDto) {
+  async listAdmin(@Query() query: ListPlacesAdminQueryDto) {
     return await this.placesService.listAdmin(query);
   }
 

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ListPlacesQueryDto } from './dto/list-places.query.dto';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
+import { ListPlacesAdminQueryDto } from './dto/list-places-admin.query.dto';
 
 @Injectable()
 export class PlacesService {
@@ -22,10 +23,8 @@ export class PlacesService {
         : {}),
     };
 
-    // Default: public-only list of published places
-    if (query.includeUnpublished !== 'true') {
-      where.isPublished = true;
-    }
+    // Public list is always published-only.
+    where.isPublished = true;
 
     const [items, total] = await Promise.all([
       this.prisma.place.findMany({
@@ -46,7 +45,7 @@ export class PlacesService {
     };
   }
 
-  async listAdmin(query: ListPlacesQueryDto) {
+  async listAdmin(query: ListPlacesAdminQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const skip = (page - 1) * limit;
@@ -59,6 +58,9 @@ export class PlacesService {
         ? { name: { contains: query.q, mode: 'insensitive' as const } }
         : {}),
     };
+
+    if (query.isPublished === 'true') where.isPublished = true;
+    if (query.isPublished === 'false') where.isPublished = false;
 
     const [items, total] = await Promise.all([
       this.prisma.place.findMany({

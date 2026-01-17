@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { IsBooleanString, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
-export class ListPlacesQueryDto {
+export class ListPlacesAdminQueryDto {
   @ApiPropertyOptional({ example: 1, description: 'Page number (1-based)' })
   @IsInt({ message: 'page must be an integer' })
   @Min(1, { message: 'page must be >= 1' })
@@ -27,6 +27,14 @@ export class ListPlacesQueryDto {
   @IsOptional()
   @IsString({ message: 'q must be a string' })
   q?: string;
+
+  @ApiPropertyOptional({
+    example: 'true',
+    description: 'Filter by published state. If omitted, returns both published and unpublished.',
+  })
+  @IsOptional()
+  @IsBooleanString({ message: 'isPublished must be a boolean string (true/false)' })
+  isPublished?: string;
 }
 
 
