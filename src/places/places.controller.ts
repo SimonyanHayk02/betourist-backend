@@ -84,6 +84,15 @@ export class PlacesController {
     return await this.placesService.softDelete(id);
   }
 
+  @ApiOperation({ summary: 'Restore a soft-deleted place (admin-only)' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
+  @Patch('admin/:id/restore')
+  async restore(@Param('id') id: string) {
+    return await this.placesService.restore(id);
+  }
+
   @ApiOperation({ summary: 'Create place (admin-only)' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)

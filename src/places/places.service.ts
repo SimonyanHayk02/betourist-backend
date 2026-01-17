@@ -131,6 +131,14 @@ export class PlacesService {
     });
   }
 
+  async restore(placeId: string) {
+    return await this.prisma.place.update({
+      where: { id: placeId },
+      data: { deletedAt: null },
+      include: { city: true, category: true, media: true },
+    });
+  }
+
   async create(dto: CreatePlaceDto) {
     return await this.prisma.place.create({
       data: {
