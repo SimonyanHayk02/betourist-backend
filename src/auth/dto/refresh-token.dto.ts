@@ -1,7 +1,7 @@
-import { IsString } from 'class-validator';
+import { IsJWT } from 'class-validator';
 
 export class RefreshTokenDto {
-  @IsString()
+  @IsJWT({ message: 'refreshToken must be a valid JWT' })
   refreshToken!: string;
 }
 

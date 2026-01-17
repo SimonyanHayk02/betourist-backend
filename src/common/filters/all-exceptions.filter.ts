@@ -34,12 +34,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const path = request.url;
     const method = request.method;
 
+    const prismaError = this.extractPrismaError(exception);
     const isHttpException = exception instanceof HttpException;
-    const statusCode = isHttpException
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+    const statusCode =
+      prismaError?.statusCode ??
+      (isHttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR);
 
-    const messageAndErrors = this.extractMessageAndErrors(exception);
+    const messageAndErrors =
+      prismaError ?? this.extractMessageAndErrors(exception);
     const message =
       statusCode === HttpStatus.INTERNAL_SERVER_ERROR
         ? 'Internal server error'
@@ -65,6 +67,34 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     httpAdapter.reply(response, body, statusCode);
+  }
+
+  private extractPrismaError(exception: unknown): {
+    statusCode: number;
+    message: string;
+    errors?: string[];
+  } | null {
+    // Avoid importing Prisma types here; check shape defensively.
+    const e = exception as any;
+    if (!e || typeof e !== 'object') return null;
+    if (e?.name !== 'PrismaClientKnownRequestError') return null;
+
+    const code: string | undefined = e?.code;
+    // https://www.prisma.io/docs/orm/reference/error-reference
+    if (code === 'P2002') {
+      const target = Array.isArray(e?.meta?.target) ? e.meta.target : [];
+      return {
+        statusCode: HttpStatus.CONFLICT,
+        message: 'Unique constraint violation',
+        ...(target.length ? { errors: target.map((t: string) => `${t} must be unique`) } : {}),
+      };
+    }
+
+    if (code === 'P2025') {
+      return { statusCode: HttpStatus.NOT_FOUND, message: 'Resource not found' };
+    }
+
+    return { statusCode: HttpStatus.BAD_REQUEST, message: 'Database request failed' };
   }
 
   private extractMessageAndErrors(exception: unknown): {
