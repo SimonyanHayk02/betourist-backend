@@ -3,6 +3,9 @@ $ /Users/macbook/Desktop/Projects/betourist-backend/node_modules/.bin/prisma mig
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
+-- Extensions (required for gen_random_uuid())
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 -- CreateEnum
 CREATE TYPE "users_role_enum" AS ENUM ('guest', 'tourist', 'verified_tourist', 'partner', 'partner_manager', 'city_moderator', 'country_moderator', 'platform_admin', 'super_admin');
 
@@ -27,8 +30,8 @@ CREATE TABLE "users" (
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "isSuspended" BOOLEAN NOT NULL DEFAULT false,
     "suspendedUntil" TIMESTAMPTZ(6),
-    "cityAssignments" JSONB NOT NULL DEFAULT '[]',
-    "countryAssignments" JSONB NOT NULL DEFAULT '[]',
+    "cityAssignments" JSONB NOT NULL DEFAULT '[]'::jsonb,
+    "countryAssignments" JSONB NOT NULL DEFAULT '[]'::jsonb,
     "partnerId" UUID,
     "managerRoleType" "users_managerroletype_enum",
 
