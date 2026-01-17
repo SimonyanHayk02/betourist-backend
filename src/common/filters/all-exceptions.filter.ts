@@ -42,8 +42,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const messageAndErrors =
       prismaError ?? this.extractMessageAndErrors(exception);
+    // If we have a Prisma-derived message, it's already sanitized and safe to show,
+    // even when it's a 500 (e.g. schema not up to date).
     const message =
-      statusCode === HttpStatus.INTERNAL_SERVER_ERROR
+      !prismaError && statusCode === HttpStatus.INTERNAL_SERVER_ERROR
         ? 'Internal server error'
         : messageAndErrors.message;
 
