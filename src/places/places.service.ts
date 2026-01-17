@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListPlacesQueryDto } from './dto/list-places.query.dto';
+import { CreatePlaceDto } from './dto/create-place.dto';
 
 @Injectable()
 export class PlacesService {
@@ -42,6 +43,35 @@ export class PlacesService {
       total,
       items,
     };
+  }
+
+  async create(dto: CreatePlaceDto) {
+    return await this.prisma.place.create({
+      data: {
+        name: dto.name,
+        description: dto.description ?? null,
+        isPublished: false,
+        cityId: dto.cityId,
+        categoryId: dto.categoryId ?? null,
+        media: dto.mediaUrls?.length
+          ? {
+              create: dto.mediaUrls.map((url, idx) => ({
+                url,
+                sortOrder: idx,
+              })),
+            }
+          : undefined,
+      },
+      include: { city: true, category: true, media: true },
+    });
+  }
+
+  async setPublished(placeId: string, isPublished: boolean) {
+    return await this.prisma.place.update({
+      where: { id: placeId },
+      data: { isPublished },
+      include: { city: true, category: true, media: true },
+    });
   }
 }
 

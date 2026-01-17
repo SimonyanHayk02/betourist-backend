@@ -22,6 +22,7 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:studio:docker": "DATABASE_URL=\"postgresql://betourist:betourist@localhost:5433/betourist?schema=public\" prisma studio",
+    "dev:promote-user": "node scripts/promote-user-role.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

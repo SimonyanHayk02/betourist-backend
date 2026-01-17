@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { CountriesModule } from './countries/countries.module';
 import { CitiesModule } from './cities/cities.module';
 import { PlacesModule } from './places/places.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PlacesModule } from './places/places.module';
     UsersModule,
     CountriesModule,
     CitiesModule,
+    CategoriesModule,
     PlacesModule,
   ],
   controllers: [AppController],

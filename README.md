@@ -124,6 +124,15 @@ Write endpoints for location data are protected with:
 - `JwtAuthGuard` + `RolesGuard`
 - allowed roles: `platform_admin`, `super_admin`
 
+## Dev utilities
+
+Promote a user to an admin role (local docker DB):
+
+```bash
+DATABASE_URL="postgresql://betourist:betourist@localhost:5433/betourist?schema=public" \
+  yarn dev:promote-user someone@example.com platform_admin
+```
+
 ## Run tests
 
 ```bash
