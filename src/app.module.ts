@@ -9,6 +9,7 @@ import { CountriesModule } from './countries/countries.module';
 import { CitiesModule } from './cities/cities.module';
 import { PlacesModule } from './places/places.module';
 import { CategoriesModule } from './categories/categories.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CategoriesModule } from './categories/categories.module';
     CitiesModule,
     CategoriesModule,
     PlacesModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
