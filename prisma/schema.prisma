@@ -92,8 +92,64 @@ model City {
   // PostGIS-ready column for geo queries. Prisma treats it as unsupported; geo queries use raw SQL in later steps.
   location  Unsupported("geography(Point,4326)")?
 
+  places    Place[]
+
   @@index([countryId])
   @@map("cities")
+}
+
+model Category {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @default(now()) @db.Timestamptz(6)
+  deletedAt DateTime? @db.Timestamptz(6)
+
+  name      String    @db.Text
+  slug      String    @unique @db.Text
+
+  places    Place[]
+
+  @@map("categories")
+}
+
+model Place {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime   @updatedAt @default(now()) @db.Timestamptz(6)
+  deletedAt   DateTime?  @db.Timestamptz(6)
+
+  name        String     @db.Text
+  description String?    @db.Text
+  isPublished Boolean    @default(false)
+
+  cityId      String     @db.Uuid
+  city        City       @relation(fields: [cityId], references: [id], onDelete: Restrict)
+
+  categoryId  String?    @db.Uuid
+  category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  media       PlaceMedia[]
+
+  @@index([cityId])
+  @@index([categoryId])
+  @@index([isPublished])
+  @@map("places")
+}
+
+model PlaceMedia {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @default(now()) @db.Timestamptz(6)
+  deletedAt DateTime? @db.Timestamptz(6)
+
+  placeId   String    @db.Uuid
+  place     Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  url       String    @db.Text
+  sortOrder Int       @default(0)
+
+  @@index([placeId])
+  @@map("place_media")
 }
 
 

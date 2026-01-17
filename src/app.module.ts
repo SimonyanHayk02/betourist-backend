@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CountriesModule } from './countries/countries.module';
 import { CitiesModule } from './cities/cities.module';
+import { PlacesModule } from './places/places.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CitiesModule } from './cities/cities.module';
     UsersModule,
     CountriesModule,
     CitiesModule,
+    PlacesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
