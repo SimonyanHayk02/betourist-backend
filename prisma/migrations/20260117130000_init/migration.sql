@@ -1,5 +1,3 @@
-yarn run v1.22.22
-$ /Users/macbook/Desktop/Projects/betourist-backend/node_modules/.bin/prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
@@ -43,5 +41,3 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_phone_key" ON "users"("phone");
-
-Done in 0.99s.
