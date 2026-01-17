@@ -49,7 +49,10 @@ async function bootstrap() {
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
+    // Expose docs at both `/api/docs` (with global prefix) and `/docs` (without),
+    // to avoid confusion across environments/proxies.
     SwaggerModule.setup('docs', app, document, { useGlobalPrefix: true });
+    SwaggerModule.setup('docs', app, document, { useGlobalPrefix: false });
   }
 
   await app.listen(port);
