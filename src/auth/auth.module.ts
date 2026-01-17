@@ -6,10 +6,14 @@ import type { JwtModuleOptions } from '@nestjs/jwt';
 import type { StringValue } from 'ms';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RolesGuard } from './guards/roles.guard';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     ConfigModule,
+    UsersModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -31,8 +35,9 @@ import { RolesGuard } from './guards/roles.guard';
       },
     }),
   ],
-  providers: [JwtStrategy, RolesGuard],
-  exports: [JwtModule, PassportModule, RolesGuard],
+  controllers: [AuthController],
+  providers: [JwtStrategy, RolesGuard, AuthService],
+  exports: [JwtModule, PassportModule, RolesGuard, AuthService],
 })
 export class AuthModule {}
 

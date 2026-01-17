@@ -17,6 +17,9 @@ export class User extends BaseEntity {
   @Column({ type: 'text' })
   passwordHash!: string;
 
+  @Column({ type: 'text', nullable: true })
+  refreshTokenHash!: string | null;
+
   @Column({ type: 'enum', enum: UserRole, default: UserRole.Tourist })
   role!: UserRole;
 
