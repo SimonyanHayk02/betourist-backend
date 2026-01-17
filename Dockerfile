@@ -1,6 +1,8 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json yarn.lock ./
+# Needed because `@prisma/client` runs `prisma generate` on install.
+COPY prisma/schema.prisma ./prisma/schema.prisma
 RUN yarn install --frozen-lockfile
 
 FROM node:22-alpine AS build
