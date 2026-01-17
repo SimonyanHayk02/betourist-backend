@@ -64,4 +64,36 @@ model User {
   @@map("users")
 }
 
+model Country {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @default(now()) @db.Timestamptz(6)
+  deletedAt DateTime? @db.Timestamptz(6)
+
+  name      String   @db.Text
+  isoCode2  String   @unique @db.VarChar(2)
+  isoCode3  String?  @unique @db.VarChar(3)
+
+  cities    City[]
+
+  @@map("countries")
+}
+
+model City {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @default(now()) @db.Timestamptz(6)
+  deletedAt DateTime? @db.Timestamptz(6)
+
+  name      String   @db.Text
+  countryId String   @db.Uuid
+  country   Country  @relation(fields: [countryId], references: [id], onDelete: Restrict)
+
+  // PostGIS-ready column for geo queries. Prisma treats it as unsupported; geo queries use raw SQL in later steps.
+  location  Unsupported("geography(Point,4326)")?
+
+  @@index([countryId])
+  @@map("cities")
+}
+
 
