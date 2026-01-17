@@ -7,6 +7,18 @@ import { randomUUID } from 'node:crypto';
 export class CitiesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private readonly citySelect = {
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+    deletedAt: true,
+    name: true,
+    countryId: true,
+    country: true,
+    // NOTE: intentionally exclude `location` (PostGIS geography) because Prisma can error
+    // when selecting unsupported column types in some environments.
+  } as const;
+
   async create(dto: CreateCityDto) {
     // Prisma doesn't support PostGIS geography(Point,4326) natively.
     // We insert via parameterized raw SQL, then fetch via Prisma (which ignores Unsupported columns).
@@ -26,14 +38,14 @@ export class CitiesService {
 
     return await this.prisma.city.findUnique({
       where: { id },
-      include: { country: true },
+      select: this.citySelect,
     });
   }
 
   async findAll() {
     return await this.prisma.city.findMany({
       where: { deletedAt: null },
-      include: { country: true },
+      select: this.citySelect,
       orderBy: { name: 'asc' },
     });
   }

@@ -80,6 +80,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (e?.name !== 'PrismaClientKnownRequestError') return null;
 
     const code: string | undefined = e?.code;
+    // Always log Prisma error codes (helps production debugging; response stays sanitized).
+    this.logger.warn(
+      `Prisma error ${code ?? 'unknown'}: ${String(e?.message ?? '')}`,
+    );
     // https://www.prisma.io/docs/orm/reference/error-reference
     if (code === 'P2002') {
       const target = Array.isArray(e?.meta?.target) ? e.meta.target : [];
@@ -92,6 +96,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (code === 'P2025') {
       return { statusCode: HttpStatus.NOT_FOUND, message: 'Resource not found' };
+    }
+
+    // Schema / table issues (treat as server misconfiguration)
+    if (code === 'P2021' || code === 'P2022') {
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Database schema is not up to date',
+      };
     }
 
     return { statusCode: HttpStatus.BAD_REQUEST, message: 'Database request failed' };
