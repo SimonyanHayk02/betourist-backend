@@ -56,9 +56,10 @@ async function bootstrap() {
       .setDescription('BeTourist backend API (v1)')
       .setVersion('1.0')
       .addBearerAuth()
-      // Add both variants to handle Nest URI versioning differences in generated paths.
+      // Prefer relative server so Swagger always uses the same origin/scheme (fixes prod "Failed to fetch").
+      .addServer('/')
+      // Also include absolute origin for convenience (optional).
       .addServer(normalizedBaseUrl)
-      .addServer(`${normalizedBaseUrl}/${API_PREFIX}/v${API_DEFAULT_VERSION}`)
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
