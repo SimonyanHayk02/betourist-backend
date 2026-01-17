@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import type { JwtModuleOptions } from '@nestjs/jwt';
 import type { StringValue } from 'ms';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import type { StringValue } from 'ms';
       },
     }),
   ],
+  providers: [JwtStrategy],
 })
 export class AuthModule {}
 
