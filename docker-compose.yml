@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: betourist-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: betourist
+      POSTGRES_USER: betourist
+      POSTGRES_PASSWORD: betourist
+    ports:
+      - "5433:5432"
+    volumes:
+      - betourist_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U betourist -d betourist"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: .
+    container_name: betourist-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      SWAGGER_ENABLED: "true"
+      BASE_URL: "http://localhost:3000"
+      DATABASE_URL: "postgresql://betourist:betourist@db:5432/betourist?schema=public"
+      JWT_ACCESS_SECRET: "dev-access-secret-change-me"
+      JWT_ACCESS_EXPIRES_IN: "15m"
+      JWT_REFRESH_SECRET: "dev-refresh-secret-change-me"
+      JWT_REFRESH_EXPIRES_IN: "30d"
+    ports:
+      - "3000:3000"
+
+volumes:
+  betourist_pgdata:
+
+
