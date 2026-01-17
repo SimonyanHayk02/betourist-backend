@@ -100,6 +100,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return { statusCode: HttpStatus.NOT_FOUND, message: 'Resource not found' };
     }
 
+    // Raw query failures (Prisma wraps DB errors as P2010)
+    if (code === 'P2010') {
+      const msg = String(e?.message ?? '');
+      // Postgres foreign key violation (e.g. city.countryId references missing country)
+      if (msg.includes('Code: `23503`')) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'Foreign key constraint failed',
+          errors: ['countryId must reference an existing country'],
+        };
+      }
+      return { statusCode: HttpStatus.BAD_REQUEST, message: 'Database request failed' };
+    }
+
     // Schema / table issues (treat as server misconfiguration)
     if (code === 'P2021' || code === 'P2022') {
       return {
