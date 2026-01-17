@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -28,6 +29,37 @@ export class PlacesController {
   @Get()
   async list(@Query() query: ListPlacesQueryDto) {
     return await this.placesService.list(query);
+  }
+
+  @ApiOperation({
+    summary:
+      'Admin list places (includes unpublished, supports filtering and pagination)',
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
+  @Get('admin')
+  async listAdmin(@Query() query: ListPlacesQueryDto) {
+    return await this.placesService.listAdmin(query);
+  }
+
+  @ApiOperation({ summary: 'Get published place by id (public)' })
+  @Get(':id')
+  async getPublished(@Param('id') id: string) {
+    const place = await this.placesService.getPublishedById(id);
+    if (!place) throw new NotFoundException('Place not found');
+    return place;
+  }
+
+  @ApiOperation({ summary: 'Get any place by id (admin-only)' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
+  @Get('admin/:id')
+  async getAdmin(@Param('id') id: string) {
+    const place = await this.placesService.getAnyById(id);
+    if (!place) throw new NotFoundException('Place not found');
+    return place;
   }
 
   @ApiOperation({ summary: 'Create place (admin-only)' })
