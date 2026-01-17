@@ -21,17 +21,128 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## BeTourist Backend (NestJS + Prisma + PostGIS)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Backend-first RBAC-driven API for BeTourist.
 
-## Project setup
+### API conventions
+
+- **Base path**: `/api/v1`
+- **Swagger**:
+  - `/docs`
+  - `/api/docs`
+
+## Project setup (local)
 
 ```bash
-$ yarn install
+yarn install
 ```
 
-## Compile and run the project
+## Run locally (Docker, recommended)
+
+This runs **Postgres + PostGIS** and the API.
+
+```bash
+docker compose up -d --build --remove-orphans
+```
+
+- **API**: `http://localhost:3000/api/v1`
+- **Swagger**: `http://localhost:3000/docs`
+- **DB**: `localhost:5433` (user/pass/db: `betourist`)
+
+Stop:
+
+```bash
+docker compose down
+```
+
+## Environment variables
+
+Local docker uses `docker-compose.yml` env for the API container.
+For deployments, set these in your platform (Railway, etc):
+
+- **DATABASE_URL**: Postgres connection string
+- **JWT_ACCESS_SECRET**
+- **JWT_REFRESH_SECRET**
+- **JWT_ACCESS_EXPIRES_IN** (default: `15m`)
+- **JWT_REFRESH_EXPIRES_IN** (default: `30d`)
+- **NODE_ENV**: `production` in production
+- **BASE_URL**: public base URL used for Swagger server listing (e.g. `https://...`)
+- **SWAGGER_ENABLED**: set `true` to force-enable Swagger in production
+
+## Prisma
+
+### Migrations
+
+- **Apply migrations**:
+
+```bash
+yarn prisma:migrate:deploy
+```
+
+### Prisma Studio (local docker DB)
+
+If your `.env` points to Railway (or any remote DB), Prisma Studio will open that database.
+To inspect the **local docker DB** on `localhost:5433`:
+
+```bash
+yarn prisma:studio:docker
+```
+
+## Auth (Phase 2)
+
+Endpoints:
+
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh` (refresh token in body)
+- `POST /api/v1/auth/logout` (requires Bearer access token)
+
+Notes:
+
+- Passwords hashed using **argon2**
+- Refresh token stored **hashed** in DB and rotated on refresh
+
+## Location foundation (Phase 3)
+
+Endpoints:
+
+- `GET /api/v1/countries` (public)
+- `POST /api/v1/countries` (**admin-only**)
+- `GET /api/v1/cities` (public)
+- `GET /api/v1/cities/near?lat=&lng=&radiusMeters=&limit=` (public)
+- `POST /api/v1/cities` (**admin-only**, optional WKT location)
+
+WKT location format:
+
+- `POINT(lon lat)` (SRID 4326 assumed), example: `POINT(44.5126 40.1772)`
+
+## RBAC
+
+Write endpoints for location data are protected with:
+
+- `JwtAuthGuard` + `RolesGuard`
+- allowed roles: `platform_admin`, `super_admin`
+
+## Run tests
+
+```bash
+yarn test
+yarn test:e2e
+```
+
+## Deployment (Railway quick notes)
+
+- Ensure backend service has `DATABASE_URL` set (from the Postgres plugin)
+- Run migrations on deploy:
+
+```bash
+yarn prisma:migrate:deploy
+```
+
+---
+
+## Compile and run the project (legacy)
 
 ```bash
 # development
@@ -55,21 +166,6 @@ $ yarn run test:e2e
 
 # test coverage
 $ yarn run test:cov
-```
-
-## docker run local
-
-```
-$  docker compose up -d --build --remove-orphans
-```
-
-## Prisma Studio (local docker DB)
-
-If your `.env` points to Railway (or any remote DB), Prisma Studio will open that database.
-To inspect the **local docker DB** on `localhost:5433`:
-
-```bash
-yarn prisma:studio:docker
 ```
 
 ## Deployment
