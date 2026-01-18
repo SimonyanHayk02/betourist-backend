@@ -10,6 +10,7 @@ import { CitiesModule } from './cities/cities.module';
 import { PlacesModule } from './places/places.module';
 import { CategoriesModule } from './categories/categories.module';
 import { HealthModule } from './health/health.module';
+import { AdminUsersModule } from './admin/users/admin-users.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { HealthModule } from './health/health.module';
     CategoriesModule,
     PlacesModule,
     HealthModule,
+    AdminUsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
