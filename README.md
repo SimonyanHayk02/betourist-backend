@@ -168,6 +168,35 @@ After deploy, verify:
 - `GET /api/v1/health` (liveness)
 - `GET /api/v1/health/ready` (readiness + DB ping)
 
+### Railway runbook (recommended)
+
+If you need to run operational commands in the production environment:
+
+- **Run migrations**:
+
+```bash
+npx --yes @railway/cli run yarn prisma:migrate:deploy
+```
+
+- **Seed starter content** (idempotent):
+
+```bash
+npx --yes @railway/cli run yarn seed:prod
+```
+
+- **Promote a user to admin**:
+  - Register the user first via `POST /api/v1/auth/register`
+  - Then:
+
+```bash
+npx --yes @railway/cli run yarn dev:promote-user admin@example.com platform_admin
+```
+
+- **Quick smoke checks**:
+  - `GET /docs` (Swagger)
+  - `GET /api/v1/countries`
+  - `GET /api/v1/cities`
+
 ## Seeding (production)
 
 Run an idempotent seed (countries/cities/categories) in the Railway backend service:
