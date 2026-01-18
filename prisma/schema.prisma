@@ -113,9 +113,12 @@ model Category {
 
   name      String    @db.Text
   slug      String    @unique @db.Text
+  isActive  Boolean   @default(true)
+  order     Int       @default(0)
 
   places    Place[]
 
+  @@index([isActive, order])
   @@map("categories")
 }
 
@@ -128,6 +131,13 @@ model Place {
   name        String     @db.Text
   description String?    @db.Text
   isPublished Boolean    @default(false)
+  isFeatured  Boolean    @default(false)
+
+  // Snapshots (do not compute dynamically in Phase 7)
+  priceFromCents Int?
+  currency       String? @db.VarChar(3)
+  ratingAvg      Float   @default(0)
+  ratingCount    Int     @default(0)
 
   cityId      String     @db.Uuid
   city        City       @relation(fields: [cityId], references: [id], onDelete: Restrict)
@@ -135,11 +145,15 @@ model Place {
   categoryId  String?    @db.Uuid
   category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
+  // Optional geo point for experience/location pin (PostGIS)
+  location  Unsupported("geography(Point,4326)")?
+
   media       PlaceMedia[]
 
   @@index([cityId])
   @@index([categoryId])
   @@index([isPublished])
+  @@index([isFeatured])
   @@map("places")
 }
 

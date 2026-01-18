@@ -11,6 +11,7 @@ import { PlacesModule } from './places/places.module';
 import { CategoriesModule } from './categories/categories.module';
 import { HealthModule } from './health/health.module';
 import { AdminUsersModule } from './admin/users/admin-users.module';
+import { ExperiencesModule } from './experiences/experiences.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
@@ -51,6 +52,7 @@ import { ConfigService } from '@nestjs/config';
     CitiesModule,
     CategoriesModule,
     PlacesModule,
+    ExperiencesModule,
     HealthModule,
     AdminUsersModule,
   ],

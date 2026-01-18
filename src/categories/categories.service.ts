@@ -12,14 +12,16 @@ export class CategoriesService {
       data: {
         name: dto.name,
         slug: dto.slug,
+        isActive: dto.isActive ?? true,
+        order: dto.order ?? 0,
       },
     });
   }
 
   async findAll() {
     return await this.prisma.category.findMany({
-      where: { deletedAt: null },
-      orderBy: { name: 'asc' },
+      where: { deletedAt: null, isActive: true },
+      orderBy: [{ order: 'asc' }, { name: 'asc' }],
     });
   }
 
@@ -29,6 +31,8 @@ export class CategoriesService {
       data: {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.slug !== undefined ? { slug: dto.slug } : {}),
+        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+        ...(dto.order !== undefined ? { order: dto.order } : {}),
       },
     });
   }

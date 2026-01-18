@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength, Matches } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Matches, Min } from 'class-validator';
 
 export class UpdateCategoryDto {
   @ApiPropertyOptional({ example: 'Cafe' })
@@ -16,6 +16,17 @@ export class UpdateCategoryDto {
     message: 'slug must be lowercase kebab-case (e.g. "coffee-shop")',
   })
   slug?: string;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean({ message: 'isActive must be a boolean' })
+  isActive?: boolean;
+
+  @ApiPropertyOptional({ example: 0 })
+  @IsOptional()
+  @Min(0, { message: 'order must be >= 0' })
+  @IsInt({ message: 'order must be an integer' })
+  order?: number;
 }
 
 
