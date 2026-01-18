@@ -84,13 +84,30 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // Avoid importing Prisma types here; check shape defensively.
     const e = exception as any;
     if (!e || typeof e !== 'object') return null;
-    if (e?.name !== 'PrismaClientKnownRequestError') return null;
+    const prismaName: string | undefined = e?.name;
+    if (!prismaName || typeof prismaName !== 'string') return null;
+    if (!prismaName.startsWith('PrismaClient')) return null;
 
     const code: string | undefined = e?.code;
-    // Always log Prisma error codes (helps production debugging; response stays sanitized).
+    // Always log Prisma error name/code (helps production debugging; response stays sanitized).
     this.logger.warn(
-      `Prisma error ${code ?? 'unknown'}: ${String(e?.message ?? '')}`,
+      `Prisma error ${prismaName}${code ? ` ${code}` : ''}: ${String(e?.message ?? '')}`,
     );
+
+    if (prismaName === 'PrismaClientValidationError') {
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Invalid database request',
+      };
+    }
+
+    if (prismaName !== 'PrismaClientKnownRequestError') {
+      // Unknown Prisma errors => treat as server error (but keep message sanitized)
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Database error',
+      };
+    }
     // https://www.prisma.io/docs/orm/reference/error-reference
     if (code === 'P2002') {
       const target = Array.isArray(e?.meta?.target) ? e.meta.target : [];
