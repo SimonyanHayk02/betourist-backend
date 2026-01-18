@@ -30,7 +30,18 @@ import { ConfigService } from '@nestjs/config';
         );
         const limit = Number(configService.get<string>('THROTTLE_LIMIT') ?? '120');
 
-        return [{ ttl: ttlSeconds * 1000, limit }];
+        return [
+          {
+            ttl: ttlSeconds * 1000,
+            limit,
+            // Keep operational endpoints accessible (Swagger, etc.) even under load testing.
+            skipIf: (context) => {
+              const req = context.switchToHttp().getRequest();
+              const url: string = req?.originalUrl ?? req?.url ?? '';
+              return url.startsWith('/docs') || url.startsWith('/api/docs');
+            },
+          },
+        ];
       },
     }),
     PrismaModule,

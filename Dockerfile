@@ -23,6 +23,6 @@ COPY package.json yarn.lock ./
 EXPOSE 3000
 
 # Run DB migrations on container start, then boot the API.
-CMD ["sh", "-c", "yarn prisma:migrate:deploy && node dist/src/main.js"]
+CMD ["sh", "-c", "yarn prisma:migrate:deploy && node dist/main.js"]
 
 
