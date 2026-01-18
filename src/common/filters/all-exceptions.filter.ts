@@ -14,6 +14,7 @@ type ErrorResponseBody = {
   timestamp: string;
   path: string;
   method: string;
+  requestId?: string;
   message: string;
   errors?: string[];
 };
@@ -33,6 +34,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const timestamp = new Date().toISOString();
     const path = request.url;
     const method = request.method;
+    const requestId =
+      (request as any)?.requestId ??
+      (typeof request.header === 'function' ? request.header('x-request-id') : undefined);
 
     const prismaError = this.extractPrismaError(exception);
     const isHttpException = exception instanceof HttpException;
@@ -54,6 +58,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       timestamp,
       path,
       method,
+      ...(requestId ? { requestId } : {}),
       message,
       ...(messageAndErrors.errors?.length
         ? { errors: messageAndErrors.errors }
@@ -63,7 +68,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (statusCode >= 500) {
       const err = exception as any;
       this.logger.error(
-        `${method} ${path} -> ${statusCode}`,
+        `${method} ${path} -> ${statusCode}${requestId ? ` rid=${requestId}` : ''}`,
         err?.stack ?? String(exception),
       );
     }

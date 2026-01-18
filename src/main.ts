@@ -6,6 +6,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { API_DEFAULT_VERSION, API_PREFIX } from './common/constants/api.constants';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { requestIdMiddleware } from './common/middleware/request-id.middleware';
+import { httpLoggerMiddleware } from './common/middleware/http-logger.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,6 +25,9 @@ async function bootstrap() {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+
+  app.use(requestIdMiddleware);
+  app.use(httpLoggerMiddleware);
 
   app.enableCors({
     origin: (origin, callback) => {
