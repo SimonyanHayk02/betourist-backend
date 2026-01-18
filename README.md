@@ -61,6 +61,8 @@ docker compose down
 Local docker uses `docker-compose.yml` env for the API container.
 For deployments, set these in your platform (Railway, etc):
 
+- Example template: `docs/env.example`
+
 - **DATABASE_URL**: Postgres connection string
 - **JWT_ACCESS_SECRET**
 - **JWT_REFRESH_SECRET**
@@ -146,11 +148,14 @@ yarn test:e2e
 
 ## Deployment (Railway quick notes)
 
+- Use a **Postgres + PostGIS** compatible database. (PostGIS is required for geo features like cities `location`.)
 - Ensure backend service has `DATABASE_URL` set (from the Postgres plugin)
 - Ensure these are set (at minimum):
   - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
   - `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`
   - `NODE_ENV=production`
+  - `CORS_ORIGINS=https://your-frontend.app`
+  - `TRUST_PROXY=true`
   - Optional: `SWAGGER_ENABLED=true` if you want Swagger in prod
 - Run migrations on deploy (Docker CMD already runs this, but you can run manually too):
 
