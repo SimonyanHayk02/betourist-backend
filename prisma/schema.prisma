@@ -61,6 +61,10 @@ model User {
   partnerId          String?                @db.Uuid
   managerRoleType    DbPartnerManagerRoleType?
 
+  selectedCityId     String?                @db.Uuid
+  selectedCity       City?                  @relation("UserSelectedCity", fields: [selectedCityId], references: [id], onDelete: SetNull)
+
+  @@index([selectedCityId])
   @@map("users")
 }
 
@@ -92,7 +96,10 @@ model City {
   // PostGIS-ready column for geo queries. Prisma treats it as unsupported; geo queries use raw SQL in later steps.
   location  Unsupported("geography(Point,4326)")?
 
+  heroImageUrl String? @db.Text
+
   places    Place[]
+  selectedByUsers User[] @relation("UserSelectedCity")
 
   @@index([countryId])
   @@map("cities")

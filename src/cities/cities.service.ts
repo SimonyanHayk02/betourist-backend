@@ -13,6 +13,7 @@ export class CitiesService {
     updatedAt: true,
     deletedAt: true,
     name: true,
+    heroImageUrl: true,
     countryId: true,
     country: true,
     // NOTE: intentionally exclude `location` (PostGIS geography) because Prisma can error
