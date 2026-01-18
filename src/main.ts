@@ -13,9 +13,45 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') ?? 3000;
   const baseUrlRaw = configService.get<string>('BASE_URL');
+  const corsOriginsRaw = configService.get<string>('CORS_ORIGINS') ?? '';
+  const nodeEnv = (configService.get<string>('NODE_ENV') ?? '').toLowerCase();
   const swaggerEnabled =
     (configService.get<string>('SWAGGER_ENABLED') ?? '').toLowerCase() ===
       'true' || configService.get('NODE_ENV') !== 'production';
+
+  const corsOrigins = corsOriginsRaw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  app.enableCors({
+    origin: (origin, callback) => {
+      // Allow non-browser clients (curl, Postman, server-to-server) with no Origin header.
+      if (!origin) return callback(null, true);
+
+      // Explicit wildcard.
+      if (corsOrigins.includes('*')) return callback(null, true);
+
+      // Strict allowlist if provided.
+      if (corsOrigins.length > 0) {
+        return callback(null, corsOrigins.includes(origin));
+      }
+
+      // Dev fallback (keeps least-privilege in prod if env not set).
+      if (nodeEnv !== 'production') {
+        const localhostOk =
+          /^http:\/\/localhost(:\d+)?$/i.test(origin) ||
+          /^http:\/\/127\.0\.0\.1(:\d+)?$/i.test(origin);
+        return callback(null, localhostOk);
+      }
+
+      return callback(null, false);
+    },
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false,
+    optionsSuccessStatus: 204,
+  });
 
   app.setGlobalPrefix(API_PREFIX);
   app.enableVersioning({

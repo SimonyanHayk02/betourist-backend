@@ -69,6 +69,7 @@ For deployments, set these in your platform (Railway, etc):
 - **NODE_ENV**: `production` in production
 - **BASE_URL**: public base URL used for Swagger server listing (e.g. `https://...`)
 - **SWAGGER_ENABLED**: set `true` to force-enable Swagger in production
+- **CORS_ORIGINS**: comma-separated browser origins allowed to call the API (e.g. `http://localhost:5173,https://your-frontend.app`)
 
 ## Prisma
 
