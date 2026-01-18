@@ -159,6 +159,14 @@ After deploy, verify:
 - `GET /api/v1/health` (liveness)
 - `GET /api/v1/health/ready` (readiness + DB ping)
 
+## Seeding (production)
+
+Run an idempotent seed (countries/cities/categories) in the Railway backend service:
+
+```bash
+npx --yes @railway/cli run yarn seed:prod
+```
+
 ---
 
 ## Compile and run the project (legacy)
