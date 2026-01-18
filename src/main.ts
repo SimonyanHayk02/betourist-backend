@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { HttpAdapterHost } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { API_DEFAULT_VERSION, API_PREFIX } from './common/constants/api.constants';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -17,9 +18,17 @@ async function bootstrap() {
   const baseUrlRaw = configService.get<string>('BASE_URL');
   const corsOriginsRaw = configService.get<string>('CORS_ORIGINS') ?? '';
   const nodeEnv = (configService.get<string>('NODE_ENV') ?? '').toLowerCase();
+  const trustProxyRaw =
+    (configService.get<string>('TRUST_PROXY') ?? '').toLowerCase() === 'true';
   const swaggerEnabled =
     (configService.get<string>('SWAGGER_ENABLED') ?? '').toLowerCase() ===
       'true' || configService.get('NODE_ENV') !== 'production';
+
+  // Railway / reverse proxy setups: needed for correct client IPs (rate limiting) and HTTPS awareness.
+  if (trustProxyRaw || nodeEnv === 'production') {
+    // `set` is Express-specific.
+    (app as any).set('trust proxy', 1);
+  }
 
   const corsOrigins = corsOriginsRaw
     .split(',')
@@ -28,6 +37,14 @@ async function bootstrap() {
 
   app.use(requestIdMiddleware);
   app.use(httpLoggerMiddleware);
+
+  // Security headers. Disable CSP/COEP to avoid breaking Swagger UI.
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   app.enableCors({
     origin: (origin, callback) => {

@@ -70,6 +70,9 @@ For deployments, set these in your platform (Railway, etc):
 - **BASE_URL**: public base URL used for Swagger server listing (e.g. `https://...`)
 - **SWAGGER_ENABLED**: set `true` to force-enable Swagger in production
 - **CORS_ORIGINS**: comma-separated browser origins allowed to call the API (e.g. `http://localhost:5173,https://your-frontend.app`)
+- **THROTTLE_TTL_SECONDS**: global rate limit window in seconds (default: `60`)
+- **THROTTLE_LIMIT**: global max requests per window per IP (default: `120`)
+- **TRUST_PROXY**: set `true` behind proxies (Railway) so rate limiting uses real client IPs
 
 ## Prisma
 

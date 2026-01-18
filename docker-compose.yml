@@ -33,6 +33,11 @@ services:
       BASE_URL: "http://localhost:3000"
       # Comma-separated list of allowed browser origins for CORS (frontend dev servers, etc).
       CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000"
+      # Rate limiting (global defaults). Auth endpoints have stricter per-route limits.
+      THROTTLE_TTL_SECONDS: "60"
+      THROTTLE_LIMIT: "120"
+      # Set true when running behind a proxy/load balancer (Railway, etc).
+      TRUST_PROXY: "true"
       DATABASE_URL: "postgresql://betourist:betourist@db:5432/betourist?schema=public"
       JWT_ACCESS_SECRET: "dev-access-secret-change-me"
       JWT_ACCESS_EXPIRES_IN: "15m"
