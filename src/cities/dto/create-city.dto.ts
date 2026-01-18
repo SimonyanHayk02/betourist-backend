@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsOptional, IsString, IsUUID, IsUrl, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsWktPoint } from '../../common/validators/wkt-point.validator';
 
@@ -24,6 +24,15 @@ export class CreateCityDto {
   })
   // Example: "POINT(44.5126 40.1772)" (lon lat)
   wktLocation?: string;
+
+  @IsOptional()
+  @ApiPropertyOptional({
+    example:
+      'https://res.cloudinary.com/dmnpoykc6/image/upload/f_auto,q_auto,w_1600/v1/cities/yerevan.jpg',
+    description: 'Public URL for the city header/hero image (e.g. Cloudinary secure_url).',
+  })
+  @IsUrl({}, { message: 'heroImageUrl must be a valid URL' })
+  heroImageUrl?: string;
 }
 
 

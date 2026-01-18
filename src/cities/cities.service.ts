@@ -27,13 +27,13 @@ export class CitiesService {
 
     if (dto.wktLocation) {
       await this.prisma.$executeRaw`
-        INSERT INTO "cities" ("id","createdAt","updatedAt","deletedAt","name","countryId","location")
-        VALUES (${id}::uuid, now(), now(), NULL, ${dto.name}, ${dto.countryId}::uuid, ST_GeogFromText(${dto.wktLocation}))
+        INSERT INTO "cities" ("id","createdAt","updatedAt","deletedAt","name","countryId","location","heroImageUrl")
+        VALUES (${id}::uuid, now(), now(), NULL, ${dto.name}, ${dto.countryId}::uuid, ST_GeogFromText(${dto.wktLocation}), ${dto.heroImageUrl ?? null})
       `;
     } else {
       await this.prisma.$executeRaw`
-        INSERT INTO "cities" ("id","createdAt","updatedAt","deletedAt","name","countryId","location")
-        VALUES (${id}::uuid, now(), now(), NULL, ${dto.name}, ${dto.countryId}::uuid, NULL)
+        INSERT INTO "cities" ("id","createdAt","updatedAt","deletedAt","name","countryId","location","heroImageUrl")
+        VALUES (${id}::uuid, now(), now(), NULL, ${dto.name}, ${dto.countryId}::uuid, NULL, ${dto.heroImageUrl ?? null})
       `;
     }
 
