@@ -40,6 +40,20 @@ export class UsersService {
     return await this.prisma.user.findUnique({ where: { id } });
   }
 
+  async getAuthStatusById(id: string) {
+    return await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        deletedAt: true,
+        isActive: true,
+        isSuspended: true,
+        suspendedUntil: true,
+        role: true,
+      },
+    });
+  }
+
   async createTouristUser(input: {
     email?: string;
     phone?: string;

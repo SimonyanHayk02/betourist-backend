@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
@@ -57,6 +62,8 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
+    this.assertUserCanAuthenticate(user);
+
     const ok = await argon2.verify(user.passwordHash, dto.password);
     if (!ok) throw new UnauthorizedException('Invalid credentials');
 
@@ -73,6 +80,8 @@ export class AuthService {
     if (!user || !user.refreshTokenHash) {
       throw new UnauthorizedException('Invalid refresh token');
     }
+
+    this.assertUserCanAuthenticate(user);
 
     const ok = await argon2.verify(user.refreshTokenHash, refreshToken);
     if (!ok) throw new UnauthorizedException('Invalid refresh token');
@@ -130,6 +139,25 @@ export class AuthService {
   private async storeRefreshTokenHash(userId: string, refreshToken: string) {
     const refreshTokenHash = await argon2.hash(refreshToken);
     await this.usersService.setRefreshTokenHash(userId, refreshTokenHash);
+  }
+
+  private assertUserCanAuthenticate(user: any) {
+    if (user.deletedAt) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    if (user.isActive === false) {
+      throw new ForbiddenException('User is inactive');
+    }
+    if (user.isSuspended === true) {
+      if (!user.suspendedUntil) {
+        throw new ForbiddenException('User is suspended');
+      }
+      const until = new Date(user.suspendedUntil);
+      if (Number.isFinite(until.getTime()) && until.getTime() > Date.now()) {
+        throw new ForbiddenException('User is suspended');
+      }
+      // If suspendedUntil is in the past, treat as not suspended (admin can optionally clear it).
+    }
   }
 }
 

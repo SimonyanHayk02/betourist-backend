@@ -7,6 +7,7 @@ import { UserRole } from '../../common/enums/user-role.enum';
 import { AdminUsersService } from './admin-users.service';
 import { ListUsersQueryDto } from './dto/list-users.query.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { SuspendUserDto } from './dto/suspend-user.dto';
 
 @ApiTags('admin.users')
 @ApiBearerAuth()
@@ -27,6 +28,20 @@ export class AdminUsersController {
   @Patch(':id/role')
   async updateRole(@Param('id') id: string, @Body() dto: UpdateUserRoleDto) {
     return await this.adminUsersService.updateRole(id, dto.role);
+  }
+
+  @ApiOperation({ summary: 'Suspend user (admin-only)' })
+  @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
+  @Patch(':id/suspend')
+  async suspend(@Param('id') id: string, @Body() dto: SuspendUserDto) {
+    return await this.adminUsersService.suspend(id, dto.suspendedUntil);
+  }
+
+  @ApiOperation({ summary: 'Unsuspend user (admin-only)' })
+  @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
+  @Patch(':id/unsuspend')
+  async unsuspend(@Param('id') id: string) {
+    return await this.adminUsersService.unsuspend(id);
   }
 }
 

@@ -65,6 +65,42 @@ export class AdminUsersService {
       },
     });
   }
+
+  async suspend(userId: string, suspendedUntil?: string) {
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isSuspended: true,
+        suspendedUntil: suspendedUntil ? new Date(suspendedUntil) : null,
+      },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        isSuspended: true,
+        suspendedUntil: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async unsuspend(userId: string) {
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isSuspended: false,
+        suspendedUntil: null,
+      },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        isSuspended: true,
+        suspendedUntil: true,
+        updatedAt: true,
+      },
+    });
+  }
 }
 
 
