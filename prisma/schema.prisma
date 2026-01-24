@@ -39,6 +39,15 @@ enum DbPartnerManagerRoleType {
   @@map("users_managerroletype_enum")
 }
 
+enum DbExperienceStatus {
+  draft
+  pending_review
+  published
+  unpublished
+
+  @@map("places_status_enum")
+}
+
 model User {
   id                 String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt          DateTime               @default(now()) @db.Timestamptz(6)
@@ -64,8 +73,32 @@ model User {
   selectedCityId     String?                @db.Uuid
   selectedCity       City?                  @relation("UserSelectedCity", fields: [selectedCityId], references: [id], onDelete: SetNull)
 
+  partner            Partner?               @relation("UserPartner", fields: [partnerId], references: [id], onDelete: SetNull)
+  ownedPartner       Partner?               @relation("PartnerOwner")
+
   @@index([selectedCityId])
+  @@index([partnerId])
   @@map("users")
+}
+
+model Partner {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @default(now()) @db.Timestamptz(6)
+  deletedAt DateTime? @db.Timestamptz(6)
+
+  name      String   @db.Text
+
+  // MVP: one owner user (role=partner), one partner profile.
+  ownerId   String   @unique @db.Uuid
+  owner     User     @relation("PartnerOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+
+  // Users that belong to this partner (MVP: owner may also be linked; partner_manager later).
+  users     User[]   @relation("UserPartner")
+
+  experiences Place[]
+
+  @@map("partners")
 }
 
 model Country {
@@ -132,6 +165,9 @@ model Place {
   description String?    @db.Text
   isPublished Boolean    @default(false)
   isFeatured  Boolean    @default(false)
+  status      DbExperienceStatus @default(draft)
+  publishedAt DateTime?  @db.Timestamptz(6)
+  rejectionReason String? @db.Text
 
   // Snapshots (do not compute dynamically in Phase 7)
   priceFromCents Int?
@@ -145,6 +181,9 @@ model Place {
   categoryId  String?    @db.Uuid
   category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
+  partnerId   String?    @db.Uuid
+  partner     Partner?   @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+
   // Optional geo point for experience/location pin (PostGIS)
   location  Unsupported("geography(Point,4326)")?
 
@@ -154,6 +193,12 @@ model Place {
   @@index([categoryId])
   @@index([isPublished])
   @@index([isFeatured])
+  @@index([status])
+  @@index([partnerId])
+  // Hot-path list queries (home + admin + partner dashboards)
+  @@index([status, isFeatured, updatedAt])
+  @@index([status, cityId, isFeatured, updatedAt])
+  @@index([partnerId, status, updatedAt])
   @@map("places")
 }
 
@@ -170,6 +215,7 @@ model PlaceMedia {
   sortOrder Int       @default(0)
 
   @@index([placeId])
+  @@index([placeId, sortOrder])
   @@map("place_media")
 }
 

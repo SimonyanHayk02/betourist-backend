@@ -96,6 +96,9 @@ async function ensurePlace({
     name,
     description: description ?? null,
     isPublished: true,
+    status: 'published',
+    publishedAt: new Date(),
+    rejectionReason: null,
     isFeatured: Boolean(isFeatured),
     priceFromCents: priceFromCents ?? null,
     currency: currency ?? null,
@@ -115,13 +118,16 @@ async function ensurePlace({
           "id","createdAt","updatedAt","deletedAt",
           "name","description","isPublished","isFeatured",
           "priceFromCents","currency","ratingAvg","ratingCount",
-          "cityId","categoryId","location"
+          "cityId","categoryId",
+          "status","publishedAt","rejectionReason",
+          "location"
         )
         VALUES (
           ${placeId}::uuid, now(), now(), NULL,
           ${data.name}, ${data.description}, ${data.isPublished}, ${data.isFeatured},
           ${data.priceFromCents}, ${data.currency}, ${data.ratingAvg}, ${data.ratingCount},
           ${data.cityId}::uuid, ${data.categoryId}::uuid,
+          ${data.status}::"places_status_enum", ${data.publishedAt}, ${data.rejectionReason},
           ST_GeogFromText(${wktLocation})
         )
       `;
@@ -131,13 +137,16 @@ async function ensurePlace({
           "id","createdAt","updatedAt","deletedAt",
           "name","description","isPublished","isFeatured",
           "priceFromCents","currency","ratingAvg","ratingCount",
-          "cityId","categoryId","location"
+          "cityId","categoryId",
+          "status","publishedAt","rejectionReason",
+          "location"
         )
         VALUES (
           ${placeId}::uuid, now(), now(), NULL,
           ${data.name}, ${data.description}, ${data.isPublished}, ${data.isFeatured},
           ${data.priceFromCents}, ${data.currency}, ${data.ratingAvg}, ${data.ratingCount},
           ${data.cityId}::uuid, ${data.categoryId}::uuid,
+          ${data.status}::"places_status_enum", ${data.publishedAt}, ${data.rejectionReason},
           NULL
         )
       `;

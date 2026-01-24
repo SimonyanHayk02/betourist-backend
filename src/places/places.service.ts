@@ -142,11 +142,12 @@ export class PlacesService {
   }
 
   async create(dto: CreatePlaceDto) {
-    return await this.prisma.place.create({
+    return await (this.prisma as any).place.create({
       data: {
         name: dto.name,
         description: dto.description ?? null,
         isPublished: false,
+        status: 'draft',
         cityId: dto.cityId,
         categoryId: dto.categoryId ?? null,
         media: dto.mediaUrls?.length
@@ -163,9 +164,19 @@ export class PlacesService {
   }
 
   async setPublished(placeId: string, isPublished: boolean) {
-    return await this.prisma.place.update({
+    return await (this.prisma as any).place.update({
       where: { id: placeId },
-      data: { isPublished },
+      data: isPublished
+        ? {
+            isPublished: true,
+            status: 'published',
+            publishedAt: new Date(),
+            rejectionReason: null,
+          }
+        : {
+            isPublished: false,
+            status: 'unpublished',
+          },
       include: { city: true, category: true, media: true },
     });
   }

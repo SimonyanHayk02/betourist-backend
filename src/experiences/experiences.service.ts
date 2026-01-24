@@ -7,22 +7,23 @@ export class ExperiencesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async list(query: ListExperiencesQueryDto) {
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 20;
-    const skip = (page - 1) * limit;
+    const limit = query.limit ?? 10;
+    const offset = query.offset ?? (query.page ? (query.page - 1) * limit : 0);
+    const page = query.page ?? Math.floor(offset / limit) + 1;
+    const skip = offset;
 
     const featured =
       query.featured === undefined ? true : query.featured.toLowerCase() === 'true';
 
     const where: any = {
       deletedAt: null,
-      isPublished: true,
+      status: 'published',
       ...(featured ? { isFeatured: true } : {}),
       ...(query.cityId ? { cityId: query.cityId } : {}),
     };
 
     const [items, total] = await Promise.all([
-      this.prisma.place.findMany({
+      (this.prisma as any).place.findMany({
         where,
         orderBy: [{ updatedAt: 'desc' }],
         skip,
@@ -46,39 +47,76 @@ export class ExperiencesService {
           },
         },
       }),
-      this.prisma.place.count({ where }),
+      (this.prisma as any).place.count({ where }),
     ]);
 
+    const mappedItems = items.map((p) => {
+      const heroImageUrl = p.media[0]?.url ?? null;
+      const shortDescription = p.description ?? null;
+      const ratingAvg = p.ratingAvg ?? 0;
+      const ratingCount = p.ratingCount ?? 0;
+      const category = p.category
+        ? { id: p.category.id, name: p.category.name, slug: p.category.slug }
+        : null;
+      const city = { id: p.city.id, name: p.city.name };
+
+      // Keep existing fields + add frontend-spec aliases.
+      return {
+        id: p.id,
+        title: p.name,
+        shortDescription,
+        featured: p.isFeatured,
+        heroImageUrl,
+        priceFromCents: p.priceFromCents ?? null,
+        currency: p.currency ?? null,
+        ratingAvg,
+        ratingCount,
+        category,
+        city,
+
+        // Frontend contract (API_SPECIFICATION_HOMESCREEN.md)
+        subtitle: shortDescription,
+        imageUrl: heroImageUrl,
+        categoryId: category?.id ?? null,
+        cityId: city.id,
+        rating: ratingAvg,
+        reviewCount: ratingCount,
+        price: {
+          amount: p.priceFromCents ?? null,
+          currency: p.currency ?? null,
+          per: null,
+        },
+      };
+    });
+
     return {
+      // Existing response shape (keep)
       page,
       limit,
       total,
-      items: items.map((p) => ({
-        id: p.id,
-        title: p.name,
-        shortDescription: p.description ?? null,
-        featured: p.isFeatured,
-        heroImageUrl: p.media[0]?.url ?? null,
-        priceFromCents: p.priceFromCents ?? null,
-        currency: p.currency ?? null,
-        ratingAvg: p.ratingAvg ?? 0,
-        ratingCount: p.ratingCount ?? 0,
-        category: p.category
-          ? { id: p.category.id, name: p.category.name, slug: p.category.slug }
-          : null,
-        city: { id: p.city.id, name: p.city.name },
-      })),
+      items: mappedItems,
+
+      // Frontend response shape (additive)
+      data: mappedItems,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + mappedItems.length < total,
+      },
     };
   }
 
   async getById(id: string) {
-    const place = await this.prisma.place.findFirst({
-      where: { id, deletedAt: null, isPublished: true },
+    const place = await (this.prisma as any).place.findFirst({
+      where: { id, deletedAt: null, status: 'published' },
       select: {
         id: true,
         name: true,
         description: true,
         isFeatured: true,
+        status: true,
+        publishedAt: true,
         priceFromCents: true,
         currency: true,
         ratingAvg: true,
@@ -97,22 +135,56 @@ export class ExperiencesService {
 
     const geo = await this.getGeo(place.id);
 
+    const heroImageUrl = place.media[0]?.url ?? null;
+    const galleryItems = place.media.map((m) => ({ url: m.url, sortOrder: m.sortOrder }));
+    const galleryUrls = place.media.map((m) => m.url);
+    const ratingAvg = place.ratingAvg ?? 0;
+    const ratingCount = place.ratingCount ?? 0;
+    const category = place.category
+      ? { id: place.category.id, name: place.category.name, slug: place.category.slug }
+      : null;
+    const city = { id: place.city.id, name: place.city.name };
+
     return {
+      // Existing response fields (keep)
       id: place.id,
       title: place.name,
       description: place.description ?? null,
       featured: place.isFeatured,
-      heroImageUrl: place.media[0]?.url ?? null,
+      heroImageUrl,
       priceFromCents: place.priceFromCents ?? null,
       currency: place.currency ?? null,
-      ratingAvg: place.ratingAvg ?? 0,
-      ratingCount: place.ratingCount ?? 0,
-      category: place.category
-        ? { id: place.category.id, name: place.category.name, slug: place.category.slug }
-        : null,
-      city: { id: place.city.id, name: place.city.name },
+      ratingAvg,
+      ratingCount,
+      category,
+      city,
       geo,
-      gallery: place.media.map((m) => ({ url: m.url, sortOrder: m.sortOrder })),
+
+      // CHANGE for frontend contract: provide string[] gallery as `gallery`
+      // Keep old structured items under `galleryItems`.
+      gallery: galleryUrls,
+      galleryItems,
+
+      // Frontend contract aliases
+      subtitle: place.description ?? null,
+      imageUrl: heroImageUrl,
+      categoryId: category?.id ?? null,
+      cityId: city.id,
+      rating: ratingAvg,
+      reviewCount: ratingCount,
+      coordinates: { latitude: geo.lat, longitude: geo.lng },
+      price: {
+        amount: place.priceFromCents ?? null,
+        currency: place.currency ?? null,
+        per: null,
+      },
+
+      // Spec fields we don't support in MVP: return null/empty (safe for UI)
+      location: null,
+      duration: null,
+      amenities: [],
+      highlights: [],
+      availableDates: [],
     };
   }
 

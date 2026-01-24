@@ -16,7 +16,13 @@ export class CategoriesController {
   @ApiOperation({ summary: 'List categories (public)' })
   @Get()
   async list() {
-    return await this.categoriesService.findAll();
+    const items = await this.categoriesService.findAll();
+    // Frontend home screen expects `icon`. For MVP, map icon identifier from slug.
+    // Keep extra DB fields as-is to avoid breaking any existing consumers.
+    return items.map((c: any) => ({
+      ...c,
+      icon: c.slug,
+    }));
   }
 
   @ApiOperation({ summary: 'Create category (admin-only)' })
