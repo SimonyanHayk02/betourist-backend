@@ -1,5 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Category } from '@prisma/client';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -15,11 +25,11 @@ export class CategoriesController {
 
   @ApiOperation({ summary: 'List categories (public)' })
   @Get()
-  async list() {
+  async list(): Promise<Array<Category & { icon: string }>> {
     const items = await this.categoriesService.findAll();
     // Frontend home screen expects `icon`. For MVP, map icon identifier from slug.
     // Keep extra DB fields as-is to avoid breaking any existing consumers.
-    return items.map((c: any) => ({
+    return items.map((c) => ({
       ...c,
       icon: c.slug,
     }));
@@ -30,7 +40,9 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Post()
-  async create(@Body() dto: CreateCategoryDto) {
+  async create(
+    @Body() dto: CreateCategoryDto,
+  ): ReturnType<CategoriesService['create']> {
     return await this.categoriesService.create(dto);
   }
 
@@ -39,7 +51,10 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Patch('admin/:id')
-  async update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+  ): ReturnType<CategoriesService['update']> {
     return await this.categoriesService.update(id, dto);
   }
 
@@ -48,9 +63,9 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Delete('admin/:id')
-  async softDelete(@Param('id') id: string) {
+  async softDelete(
+    @Param('id') id: string,
+  ): ReturnType<CategoriesService['softDelete']> {
     return await this.categoriesService.softDelete(id);
   }
 }
-
-

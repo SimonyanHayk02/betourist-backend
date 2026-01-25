@@ -16,16 +16,26 @@ export class ExperienceCardDto {
   @ApiProperty({ example: 'Sunset Wine Tour' })
   title!: string;
 
-  @ApiProperty({ nullable: true, example: 'Great for couples. Includes tasting.' })
+  @ApiProperty({
+    nullable: true,
+    example: 'Great for couples. Includes tasting.',
+  })
   shortDescription!: string | null;
 
   @ApiProperty({ example: true })
   featured!: boolean;
 
-  @ApiProperty({ nullable: true, example: 'https://res.cloudinary.com/.../hero.jpg' })
+  @ApiProperty({
+    nullable: true,
+    example: 'https://res.cloudinary.com/.../hero.jpg',
+  })
   heroImageUrl!: string | null;
 
-  @ApiProperty({ nullable: true, example: 2500, description: 'Minimum/starting price (cents).' })
+  @ApiProperty({
+    nullable: true,
+    example: 2500,
+    description: 'Minimum/starting price (cents).',
+  })
   priceFromCents!: number | null;
 
   @ApiProperty({ nullable: true, example: 'USD' })
@@ -43,5 +53,3 @@ export class ExperienceCardDto {
   @ApiProperty({ type: CityMiniDto })
   city!: CityMiniDto;
 }
-
-

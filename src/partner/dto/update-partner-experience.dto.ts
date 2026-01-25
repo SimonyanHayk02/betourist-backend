@@ -53,5 +53,3 @@ export class UpdatePartnerExperienceDto {
   @IsString({ each: true })
   mediaUrls?: string[];
 }
-
-

@@ -8,5 +8,3 @@ export class RejectExperienceDto {
   @MaxLength(1000)
   rejectionReason?: string;
 }
-
-

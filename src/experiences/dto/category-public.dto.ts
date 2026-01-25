@@ -10,5 +10,3 @@ export class CategoryPublicDto {
   @ApiProperty({ example: 'glamping' })
   slug!: string;
 }
-
-

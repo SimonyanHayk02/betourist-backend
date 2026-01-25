@@ -18,5 +18,3 @@ export class ListPendingExperiencesQueryDto {
   @Max(100)
   limit?: number;
 }
-
-

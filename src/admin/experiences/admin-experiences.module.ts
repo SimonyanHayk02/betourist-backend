@@ -9,5 +9,3 @@ import { AdminExperiencesService } from './admin-experiences.service';
   providers: [AdminExperiencesService],
 })
 export class AdminExperiencesModule {}
-
-

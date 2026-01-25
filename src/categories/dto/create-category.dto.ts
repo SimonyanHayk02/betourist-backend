@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Matches, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Matches,
+  Min,
+} from 'class-validator';
 
 export class CreateCategoryDto {
   @ApiProperty({ example: 'Cafe' })
@@ -26,5 +34,3 @@ export class CreateCategoryDto {
   @IsInt({ message: 'order must be an integer' })
   order?: number;
 }
-
-

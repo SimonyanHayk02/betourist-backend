@@ -30,7 +30,10 @@ export class CreatePartnerExperienceDto {
   @IsUUID()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 2500, description: 'Integer cents (e.g., 2500 = $25.00)' })
+  @ApiPropertyOptional({
+    example: 2500,
+    description: 'Integer cents (e.g., 2500 = $25.00)',
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -51,5 +54,3 @@ export class CreatePartnerExperienceDto {
   @IsString({ each: true })
   mediaUrls?: string[];
 }
-
-

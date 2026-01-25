@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, ExecutionContext } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -17,6 +17,7 @@ import { AdminExperiencesModule } from './admin/experiences/admin-experiences.mo
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
 
 @Module({
   imports: [
@@ -31,16 +32,18 @@ import { ConfigService } from '@nestjs/config';
         const ttlSeconds = Number(
           configService.get<string>('THROTTLE_TTL_SECONDS') ?? '60',
         );
-        const limit = Number(configService.get<string>('THROTTLE_LIMIT') ?? '120');
+        const limit = Number(
+          configService.get<string>('THROTTLE_LIMIT') ?? '120',
+        );
 
         return [
           {
             ttl: ttlSeconds * 1000,
             limit,
             // Keep operational endpoints accessible (Swagger, etc.) even under load testing.
-            skipIf: (context) => {
-              const req = context.switchToHttp().getRequest();
-              const url: string = req?.originalUrl ?? req?.url ?? '';
+            skipIf: (context: ExecutionContext) => {
+              const req = context.switchToHttp().getRequest<Request>();
+              const url = req.originalUrl ?? req.url ?? '';
               return url.startsWith('/docs') || url.startsWith('/api/docs');
             },
           },

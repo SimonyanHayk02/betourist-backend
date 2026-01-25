@@ -27,5 +27,3 @@ export class CountriesController {
     return await this.countriesService.create(dto);
   }
 }
-
-

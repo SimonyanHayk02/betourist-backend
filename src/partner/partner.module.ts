@@ -12,5 +12,3 @@ import { PartnerExperiencesService } from './partner-experiences.service';
   exports: [PartnerService],
 })
 export class PartnerModule {}
-
-

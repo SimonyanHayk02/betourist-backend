@@ -8,5 +8,3 @@ import { CountriesController } from './countries.controller';
   exports: [CountriesService],
 })
 export class CountriesModule {}
-
-

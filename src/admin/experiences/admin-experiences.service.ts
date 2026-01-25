@@ -1,24 +1,52 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ListPendingExperiencesQueryDto } from './dto/list-pending-experiences.query.dto';
+import { ExperienceStatus } from '../../common/enums/experience-status.enum';
+
+type PendingExperienceItem = Prisma.PlaceGetPayload<{
+  include: {
+    city: { include: { country: true } };
+    category: true;
+    media: true;
+    partner: true;
+  };
+}>;
+
+type ExperienceStatusResult = Prisma.PlaceGetPayload<{
+  select: {
+    id: true;
+    status: true;
+    publishedAt: true;
+    rejectionReason: true;
+  };
+}>;
 
 @Injectable()
 export class AdminExperiencesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async listPending(query: ListPendingExperiencesQueryDto) {
+  async listPending(query: ListPendingExperiencesQueryDto): Promise<{
+    page: number;
+    limit: number;
+    total: number;
+    items: PendingExperienceItem[];
+  }> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {
+    const where: Prisma.PlaceWhereInput = {
       deletedAt: null,
-      status: 'pending_review',
+      status: ExperienceStatus.PendingReview,
     };
 
-    const [items, total] = await Promise.all([
-      (this.prisma as any).place.findMany({
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.place.findMany({
         where,
         orderBy: [{ updatedAt: 'desc' }],
         skip,
@@ -30,17 +58,17 @@ export class AdminExperiencesService {
           partner: true,
         },
       }),
-      (this.prisma as any).place.count({ where }),
+      this.prisma.place.count({ where }),
     ]);
 
     return { page, limit, total, items };
   }
 
-  async approve(id: string) {
-    const result = await (this.prisma as any).place.updateMany({
-      where: { id, deletedAt: null, status: 'pending_review' },
+  async approve(id: string): Promise<ExperienceStatusResult> {
+    const result = await this.prisma.place.updateMany({
+      where: { id, deletedAt: null, status: ExperienceStatus.PendingReview },
       data: {
-        status: 'published',
+        status: ExperienceStatus.Published,
         isPublished: true,
         publishedAt: new Date(),
         rejectionReason: null,
@@ -50,25 +78,37 @@ export class AdminExperiencesService {
     });
 
     if (result.count === 0) {
-      const exists = await (this.prisma as any).place.findFirst({
+      const exists = await this.prisma.place.findFirst({
         where: { id, deletedAt: null },
         select: { id: true, status: true },
       });
       if (!exists) throw new NotFoundException('Experience not found');
-      throw new BadRequestException('Only pending_review experiences can be approved');
+      throw new BadRequestException(
+        'Only pending_review experiences can be approved',
+      );
     }
 
-    return await (this.prisma as any).place.findUnique({
+    const updated = await this.prisma.place.findUnique({
       where: { id },
-      select: { id: true, status: true, publishedAt: true, rejectionReason: true },
+      select: {
+        id: true,
+        status: true,
+        publishedAt: true,
+        rejectionReason: true,
+      },
     });
+    if (!updated) throw new NotFoundException('Experience not found');
+    return updated;
   }
 
-  async reject(id: string, rejectionReason?: string) {
-    const result = await (this.prisma as any).place.updateMany({
-      where: { id, deletedAt: null, status: 'pending_review' },
+  async reject(
+    id: string,
+    rejectionReason?: string,
+  ): Promise<ExperienceStatusResult> {
+    const result = await this.prisma.place.updateMany({
+      where: { id, deletedAt: null, status: ExperienceStatus.PendingReview },
       data: {
-        status: 'draft',
+        status: ExperienceStatus.Draft,
         isPublished: false,
         publishedAt: null,
         isFeatured: false,
@@ -77,19 +117,26 @@ export class AdminExperiencesService {
     });
 
     if (result.count === 0) {
-      const exists = await (this.prisma as any).place.findFirst({
+      const exists = await this.prisma.place.findFirst({
         where: { id, deletedAt: null },
         select: { id: true, status: true },
       });
       if (!exists) throw new NotFoundException('Experience not found');
-      throw new BadRequestException('Only pending_review experiences can be rejected');
+      throw new BadRequestException(
+        'Only pending_review experiences can be rejected',
+      );
     }
 
-    return await (this.prisma as any).place.findUnique({
+    const updated = await this.prisma.place.findUnique({
       where: { id },
-      select: { id: true, status: true, publishedAt: true, rejectionReason: true },
+      select: {
+        id: true,
+        status: true,
+        publishedAt: true,
+        rejectionReason: true,
+      },
     });
+    if (!updated) throw new NotFoundException('Experience not found');
+    return updated;
   }
 }
-
-

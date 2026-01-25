@@ -3,15 +3,19 @@ import { NestFactory } from '@nestjs/core';
 import { HttpAdapterHost } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { API_DEFAULT_VERSION, API_PREFIX } from './common/constants/api.constants';
+import {
+  API_DEFAULT_VERSION,
+  API_PREFIX,
+} from './common/constants/api.constants';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { requestIdMiddleware } from './common/middleware/request-id.middleware';
 import { httpLoggerMiddleware } from './common/middleware/http-logger.middleware';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') ?? 3000;
@@ -27,7 +31,7 @@ async function bootstrap() {
   // Railway / reverse proxy setups: needed for correct client IPs (rate limiting) and HTTPS awareness.
   if (trustProxyRaw || nodeEnv === 'production') {
     // `set` is Express-specific.
-    (app as any).set('trust proxy', 1);
+    app.set('trust proxy', 1);
   }
 
   const corsOrigins = corsOriginsRaw
@@ -47,7 +51,10 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       // Allow non-browser clients (curl, Postman, server-to-server) with no Origin header.
       if (!origin) return callback(null, true);
 
@@ -131,4 +138,4 @@ async function bootstrap() {
 
   await app.listen(port);
 }
-bootstrap();
+void bootstrap();

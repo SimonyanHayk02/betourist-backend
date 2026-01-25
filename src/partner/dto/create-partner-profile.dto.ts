@@ -8,5 +8,3 @@ export class CreatePartnerProfileDto {
   @MaxLength(200)
   name!: string;
 }
-
-

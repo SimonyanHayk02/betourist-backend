@@ -1,10 +1,15 @@
 import { Logger } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 
+type RequestWithMeta = Request & {
+  requestId?: string;
+  user?: { id?: string };
+};
+
 const logger = new Logger('HTTP');
 
 export function httpLoggerMiddleware(
-  req: Request,
+  req: RequestWithMeta,
   res: Response,
   next: NextFunction,
 ) {
@@ -15,7 +20,7 @@ export function httpLoggerMiddleware(
     const ms = Number(end - start) / 1_000_000;
 
     const requestId = req.requestId ?? req.header('x-request-id');
-    const userId = (req.user as any)?.id;
+    const userId = req.user?.id;
 
     const line = [
       req.method,
@@ -35,5 +40,3 @@ export function httpLoggerMiddleware(
 
   next();
 }
-
-

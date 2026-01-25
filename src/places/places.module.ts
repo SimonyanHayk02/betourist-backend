@@ -8,5 +8,3 @@ import { PlacesService } from './places.service';
   exports: [PlacesService],
 })
 export class PlacesModule {}
-
-
