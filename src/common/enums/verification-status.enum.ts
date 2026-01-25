@@ -5,5 +5,3 @@ export enum VerificationStatus {
   IdentityVerified = 'identity_verified',
   BusinessVerified = 'business_verified',
 }
-
-

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -14,25 +22,32 @@ import { RejectExperienceDto } from './dto/reject-experience.dto';
 @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
 @Controller('admin/experiences')
 export class AdminExperiencesController {
-  constructor(private readonly adminExperiencesService: AdminExperiencesService) {}
+  constructor(
+    private readonly adminExperiencesService: AdminExperiencesService,
+  ) {}
 
   @ApiOperation({ summary: 'List experiences pending review (admin-only)' })
   @Get('pending')
-  async listPending(@Query() query: ListPendingExperiencesQueryDto) {
+  async listPending(
+    @Query() query: ListPendingExperiencesQueryDto,
+  ): ReturnType<AdminExperiencesService['listPending']> {
     return await this.adminExperiencesService.listPending(query);
   }
 
   @ApiOperation({ summary: 'Approve an experience (admin-only)' })
   @Post(':id/approve')
-  async approve(@Param('id') id: string) {
+  async approve(
+    @Param('id') id: string,
+  ): ReturnType<AdminExperiencesService['approve']> {
     return await this.adminExperiencesService.approve(id);
   }
 
   @ApiOperation({ summary: 'Reject an experience (admin-only)' })
   @Post(':id/reject')
-  async reject(@Param('id') id: string, @Body() dto: RejectExperienceDto) {
+  async reject(
+    @Param('id') id: string,
+    @Body() dto: RejectExperienceDto,
+  ): ReturnType<AdminExperiencesService['reject']> {
     return await this.adminExperiencesService.reject(id, dto.rejectionReason);
   }
 }
-
-

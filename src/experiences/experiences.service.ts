@@ -1,6 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListExperiencesQueryDto } from './dto/list-experiences.query.dto';
+import { ExperienceStatus } from '../common/enums/experience-status.enum';
+
+type ExperienceDetailsItem = Prisma.PlaceGetPayload<{
+  select: {
+    id: true;
+    name: true;
+    description: true;
+    isFeatured: true;
+    status: true;
+    publishedAt: true;
+    priceFromCents: true;
+    currency: true;
+    ratingAvg: true;
+    ratingCount: true;
+    category: { select: { id: true; name: true; slug: true } };
+    city: { select: { id: true; name: true } };
+    media: { select: { url: true; sortOrder: true } };
+  };
+}>;
 
 @Injectable()
 export class ExperiencesService {
@@ -13,17 +33,19 @@ export class ExperiencesService {
     const skip = offset;
 
     const featured =
-      query.featured === undefined ? true : query.featured.toLowerCase() === 'true';
+      query.featured === undefined
+        ? true
+        : query.featured.toLowerCase() === 'true';
 
-    const where: any = {
+    const where: Prisma.PlaceWhereInput = {
       deletedAt: null,
-      status: 'published',
+      status: ExperienceStatus.Published,
       ...(featured ? { isFeatured: true } : {}),
       ...(query.cityId ? { cityId: query.cityId } : {}),
     };
 
-    const [items, total] = await Promise.all([
-      (this.prisma as any).place.findMany({
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.place.findMany({
         where,
         orderBy: [{ updatedAt: 'desc' }],
         skip,
@@ -47,7 +69,7 @@ export class ExperiencesService {
           },
         },
       }),
-      (this.prisma as any).place.count({ where }),
+      this.prisma.place.count({ where }),
     ]);
 
     const mappedItems = items.map((p) => {
@@ -108,40 +130,48 @@ export class ExperiencesService {
   }
 
   async getById(id: string) {
-    const place = await (this.prisma as any).place.findFirst({
-      where: { id, deletedAt: null, status: 'published' },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        isFeatured: true,
-        status: true,
-        publishedAt: true,
-        priceFromCents: true,
-        currency: true,
-        ratingAvg: true,
-        ratingCount: true,
-        category: { select: { id: true, name: true, slug: true } },
-        city: { select: { id: true, name: true } },
-        media: {
-          where: { deletedAt: null },
-          orderBy: { sortOrder: 'asc' },
-          select: { url: true, sortOrder: true },
+    const place: ExperienceDetailsItem | null =
+      await this.prisma.place.findFirst({
+        where: { id, deletedAt: null, status: ExperienceStatus.Published },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          isFeatured: true,
+          status: true,
+          publishedAt: true,
+          priceFromCents: true,
+          currency: true,
+          ratingAvg: true,
+          ratingCount: true,
+          category: { select: { id: true, name: true, slug: true } },
+          city: { select: { id: true, name: true } },
+          media: {
+            where: { deletedAt: null },
+            orderBy: { sortOrder: 'asc' },
+            select: { url: true, sortOrder: true },
+          },
         },
-      },
-    });
+      });
 
     if (!place) throw new NotFoundException('Experience not found');
 
     const geo = await this.getGeo(place.id);
 
     const heroImageUrl = place.media[0]?.url ?? null;
-    const galleryItems = place.media.map((m) => ({ url: m.url, sortOrder: m.sortOrder }));
+    const galleryItems = place.media.map((m) => ({
+      url: m.url,
+      sortOrder: m.sortOrder,
+    }));
     const galleryUrls = place.media.map((m) => m.url);
     const ratingAvg = place.ratingAvg ?? 0;
     const ratingCount = place.ratingCount ?? 0;
     const category = place.category
-      ? { id: place.category.id, name: place.category.name, slug: place.category.slug }
+      ? {
+          id: place.category.id,
+          name: place.category.name,
+          slug: place.category.slug,
+        }
       : null;
     const city = { id: place.city.id, name: place.city.name };
 
@@ -188,7 +218,9 @@ export class ExperiencesService {
     };
   }
 
-  private async getGeo(placeId: string): Promise<{ lat: number | null; lng: number | null }> {
+  private async getGeo(
+    placeId: string,
+  ): Promise<{ lat: number | null; lng: number | null }> {
     const rows = await this.prisma.$queryRaw<
       Array<{ lat: number | null; lng: number | null }>
     >`
@@ -204,5 +236,3 @@ export class ExperiencesService {
     return { lat: row?.lat ?? null, lng: row?.lng ?? null };
   }
 }
-
-

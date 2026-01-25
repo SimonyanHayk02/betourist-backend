@@ -26,5 +26,3 @@ export class NearbyCitiesQueryDto {
   @Max(200, { message: 'limit must be <= 200' })
   limit: number = 50;
 }
-
-

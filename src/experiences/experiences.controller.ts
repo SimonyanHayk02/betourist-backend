@@ -10,15 +10,17 @@ export class ExperiencesController {
 
   @ApiOperation({ summary: 'List experiences (public, published-only)' })
   @Get()
-  async list(@Query() query: ListExperiencesQueryDto) {
+  async list(
+    @Query() query: ListExperiencesQueryDto,
+  ): ReturnType<ExperiencesService['list']> {
     return await this.experiencesService.list(query);
   }
 
   @ApiOperation({ summary: 'Get experience details (public, published-only)' })
   @Get(':id')
-  async getById(@Param('id') id: string) {
+  async getById(
+    @Param('id') id: string,
+  ): ReturnType<ExperiencesService['getById']> {
     return await this.experiencesService.getById(id);
   }
 }
-
-

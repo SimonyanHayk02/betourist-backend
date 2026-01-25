@@ -23,5 +23,3 @@ export class ListUsersQueryDto {
   @IsString({ message: 'q must be a string' })
   q?: string;
 }
-
-

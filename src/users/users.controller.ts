@@ -10,7 +10,9 @@ import { SetSelectedCityDto } from './dto/set-selected-city.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: 'Get current user profile (includes selected city)' })
+  @ApiOperation({
+    summary: 'Get current user profile (includes selected city)',
+  })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('me')
@@ -29,5 +31,3 @@ export class UsersController {
     return await this.usersService.setSelectedCity(userId, dto.cityId);
   }
 }
-
-

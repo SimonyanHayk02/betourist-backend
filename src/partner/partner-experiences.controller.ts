@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -16,14 +25,16 @@ import { ListPartnerExperiencesQueryDto } from './dto/list-partner-experiences.q
 @Roles(UserRole.Partner)
 @Controller('partner/experiences')
 export class PartnerExperiencesController {
-  constructor(private readonly partnerExperiencesService: PartnerExperiencesService) {}
+  constructor(
+    private readonly partnerExperiencesService: PartnerExperiencesService,
+  ) {}
 
   @ApiOperation({ summary: 'List my experiences (partner-only)' })
   @Get()
   async list(
     @CurrentUser('id') userId: string,
     @Query() query: ListPartnerExperiencesQueryDto,
-  ) {
+  ): ReturnType<PartnerExperiencesService['list']> {
     return await this.partnerExperiencesService.list(userId, query);
   }
 
@@ -32,7 +43,7 @@ export class PartnerExperiencesController {
   async create(
     @CurrentUser('id') userId: string,
     @Body() dto: CreatePartnerExperienceDto,
-  ) {
+  ): ReturnType<PartnerExperiencesService['create']> {
     return await this.partnerExperiencesService.create(userId, dto);
   }
 
@@ -42,15 +53,16 @@ export class PartnerExperiencesController {
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
     @Body() dto: UpdatePartnerExperienceDto,
-  ) {
+  ): ReturnType<PartnerExperiencesService['update']> {
     return await this.partnerExperiencesService.update(userId, id, dto);
   }
 
   @ApiOperation({ summary: 'Submit my experience for review (partner-only)' })
   @Post(':id/submit')
-  async submit(@CurrentUser('id') userId: string, @Param('id') id: string) {
+  async submit(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ): ReturnType<PartnerExperiencesService['submit']> {
     return await this.partnerExperiencesService.submit(userId, id);
   }
 }
-
-

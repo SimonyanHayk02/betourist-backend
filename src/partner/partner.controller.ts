@@ -18,7 +18,9 @@ export class PartnerController {
 
   @ApiOperation({ summary: 'Get my partner profile (partner-only)' })
   @Get('profile')
-  async getProfile(@CurrentUser('id') userId: string) {
+  async getProfile(
+    @CurrentUser('id') userId: string,
+  ): ReturnType<PartnerService['getOwnedPartner']> {
     return await this.partnerService.getOwnedPartner(userId);
   }
 
@@ -27,9 +29,7 @@ export class PartnerController {
   async createProfile(
     @CurrentUser('id') userId: string,
     @Body() dto: CreatePartnerProfileDto,
-  ) {
+  ): ReturnType<PartnerService['createOwnedPartner']> {
     return await this.partnerService.createOwnedPartner(userId, dto.name);
   }
 }
-
-

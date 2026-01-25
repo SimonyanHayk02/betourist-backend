@@ -65,5 +65,3 @@ export class ExperienceDetailsDto {
   @ApiProperty({ type: [GalleryItemDto] })
   gallery!: GalleryItemDto[];
 }
-
-

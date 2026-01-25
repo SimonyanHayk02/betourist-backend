@@ -6,5 +6,3 @@ export class SetSelectedCityDto {
   @IsUUID('4', { message: 'cityId must be a UUID' })
   cityId!: string;
 }
-
-

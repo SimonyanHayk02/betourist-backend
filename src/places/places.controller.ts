@@ -30,7 +30,9 @@ export class PlacesController {
     summary: 'List published places (supports filtering and pagination)',
   })
   @Get()
-  async list(@Query() query: ListPlacesQueryDto) {
+  async list(
+    @Query() query: ListPlacesQueryDto,
+  ): ReturnType<PlacesService['list']> {
     return await this.placesService.list(query);
   }
 
@@ -42,13 +44,17 @@ export class PlacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Get('admin')
-  async listAdmin(@Query() query: ListPlacesAdminQueryDto) {
+  async listAdmin(
+    @Query() query: ListPlacesAdminQueryDto,
+  ): ReturnType<PlacesService['listAdmin']> {
     return await this.placesService.listAdmin(query);
   }
 
   @ApiOperation({ summary: 'Get published place by id (public)' })
   @Get(':id')
-  async getPublished(@Param('id') id: string) {
+  async getPublished(
+    @Param('id') id: string,
+  ): ReturnType<PlacesService['getPublishedById']> {
     const place = await this.placesService.getPublishedById(id);
     if (!place) throw new NotFoundException('Place not found');
     return place;
@@ -59,7 +65,9 @@ export class PlacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Get('admin/:id')
-  async getAdmin(@Param('id') id: string) {
+  async getAdmin(
+    @Param('id') id: string,
+  ): ReturnType<PlacesService['getAnyById']> {
     const place = await this.placesService.getAnyById(id);
     if (!place) throw new NotFoundException('Place not found');
     return place;
@@ -70,7 +78,10 @@ export class PlacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Patch('admin/:id')
-  async update(@Param('id') id: string, @Body() dto: UpdatePlaceDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdatePlaceDto,
+  ): ReturnType<PlacesService['update']> {
     const updated = await this.placesService.update(id, dto);
     if (!updated) throw new NotFoundException('Place not found');
     return updated;
@@ -81,7 +92,9 @@ export class PlacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Delete('admin/:id')
-  async softDelete(@Param('id') id: string) {
+  async softDelete(
+    @Param('id') id: string,
+  ): ReturnType<PlacesService['softDelete']> {
     return await this.placesService.softDelete(id);
   }
 
@@ -90,7 +103,7 @@ export class PlacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Patch('admin/:id/restore')
-  async restore(@Param('id') id: string) {
+  async restore(@Param('id') id: string): ReturnType<PlacesService['restore']> {
     return await this.placesService.restore(id);
   }
 
@@ -99,7 +112,9 @@ export class PlacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Post()
-  async create(@Body() dto: CreatePlaceDto) {
+  async create(
+    @Body() dto: CreatePlaceDto,
+  ): ReturnType<PlacesService['create']> {
     return await this.placesService.create(dto);
   }
 
@@ -108,7 +123,9 @@ export class PlacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Patch(':id/publish')
-  async publish(@Param('id') id: string) {
+  async publish(
+    @Param('id') id: string,
+  ): ReturnType<PlacesService['setPublished']> {
     return await this.placesService.setPublished(id, true);
   }
 
@@ -117,9 +134,9 @@ export class PlacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PlatformAdmin, UserRole.SuperAdmin)
   @Patch(':id/unpublish')
-  async unpublish(@Param('id') id: string) {
+  async unpublish(
+    @Param('id') id: string,
+  ): ReturnType<PlacesService['setPublished']> {
     return await this.placesService.setPublished(id, false);
   }
 }
-
-

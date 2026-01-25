@@ -1,9 +1,19 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PartnerService } from './partner.service';
 import { CreatePartnerExperienceDto } from './dto/create-partner-experience.dto';
 import { UpdatePartnerExperienceDto } from './dto/update-partner-experience.dto';
 import { ListPartnerExperiencesQueryDto } from './dto/list-partner-experiences.query.dto';
+import { ExperienceStatus } from '../common/enums/experience-status.enum';
+
+type PartnerExperienceItem = Prisma.PlaceGetPayload<{
+  include: { city: true; category: true; media: true; partner: true };
+}>;
 
 @Injectable()
 export class PartnerExperiencesService {
@@ -12,37 +22,48 @@ export class PartnerExperiencesService {
     private readonly partnerService: PartnerService,
   ) {}
 
-  async list(userId: string, query: ListPartnerExperiencesQueryDto) {
+  async list(
+    userId: string,
+    query: ListPartnerExperiencesQueryDto,
+  ): Promise<{
+    page: number;
+    limit: number;
+    total: number;
+    items: PartnerExperienceItem[];
+  }> {
     const partner = await this.partnerService.getOwnedPartnerOrThrow(userId);
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {
+    const where: Prisma.PlaceWhereInput = {
       deletedAt: null,
       partnerId: partner.id,
       ...(query.status ? { status: query.status } : {}),
     };
 
-    const [items, total] = await Promise.all([
-      (this.prisma as any).place.findMany({
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.place.findMany({
         where,
         orderBy: [{ updatedAt: 'desc' }],
         skip,
         take: limit,
         include: { city: true, category: true, media: true, partner: true },
       }),
-      (this.prisma as any).place.count({ where }),
+      this.prisma.place.count({ where }),
     ]);
 
     return { page, limit, total, items };
   }
 
-  async create(userId: string, dto: CreatePartnerExperienceDto) {
+  async create(
+    userId: string,
+    dto: CreatePartnerExperienceDto,
+  ): Promise<PartnerExperienceItem> {
     const partner = await this.partnerService.getOwnedPartnerOrThrow(userId);
 
-    return await (this.prisma as any).place.create({
+    return await this.prisma.place.create({
       data: {
         name: dto.title,
         description: dto.description ?? null,
@@ -50,7 +71,7 @@ export class PartnerExperiencesService {
         categoryId: dto.categoryId ?? null,
         partnerId: partner.id,
         isPublished: false,
-        status: 'draft',
+        status: ExperienceStatus.Draft,
         isFeatured: false,
         priceFromCents: dto.priceFromCents ?? null,
         currency: dto.currency ? dto.currency.toUpperCase() : null,
@@ -67,37 +88,52 @@ export class PartnerExperiencesService {
     });
   }
 
-  async update(userId: string, id: string, dto: UpdatePartnerExperienceDto) {
+  async update(
+    userId: string,
+    id: string,
+    dto: UpdatePartnerExperienceDto,
+  ): Promise<PartnerExperienceItem> {
     const partner = await this.partnerService.getOwnedPartnerOrThrow(userId);
 
-    const existing = await (this.prisma as any).place.findFirst({
+    const existing = await this.prisma.place.findFirst({
       where: { id, deletedAt: null, partnerId: partner.id },
       select: { id: true, status: true },
     });
     if (!existing) throw new NotFoundException('Experience not found');
-    if (existing.status !== 'draft') {
+    const currentStatus = existing.status as ExperienceStatus;
+    if (currentStatus !== ExperienceStatus.Draft) {
       throw new BadRequestException('Only draft experiences can be edited');
     }
 
     return await this.prisma.$transaction(async (tx) => {
-      const data: any = {};
+      const data: Prisma.PlaceUpdateInput = {};
       if (dto.title !== undefined) data.name = dto.title;
-      if (dto.description !== undefined) data.description = dto.description ?? null;
-      if (dto.cityId !== undefined) data.cityId = dto.cityId;
-      if (dto.categoryId !== undefined) data.categoryId = dto.categoryId ?? null;
-      if (dto.priceFromCents !== undefined) data.priceFromCents = dto.priceFromCents;
+      if (dto.description !== undefined)
+        data.description = dto.description ?? null;
+      if (dto.cityId !== undefined) {
+        data.city = { connect: { id: dto.cityId } };
+      }
+      if (dto.categoryId !== undefined) {
+        data.category = dto.categoryId
+          ? { connect: { id: dto.categoryId } }
+          : { disconnect: true };
+      }
+      if (dto.priceFromCents !== undefined)
+        data.priceFromCents = dto.priceFromCents;
       if (dto.currency !== undefined)
         data.currency = dto.currency ? dto.currency.toUpperCase() : null;
 
-      await (tx as any).place.update({
+      await tx.place.update({
         where: { id: existing.id },
         data,
       });
 
       if (dto.mediaUrls !== undefined) {
-        await (tx as any).placeMedia.deleteMany({ where: { placeId: existing.id } });
+        await tx.placeMedia.deleteMany({
+          where: { placeId: existing.id },
+        });
         if (dto.mediaUrls.length) {
-          await (tx as any).placeMedia.createMany({
+          await tx.placeMedia.createMany({
             data: dto.mediaUrls.map((url, idx) => ({
               placeId: existing.id,
               url,
@@ -107,29 +143,32 @@ export class PartnerExperiencesService {
         }
       }
 
-      return await (tx as any).place.findUnique({
+      const updated = await tx.place.findUnique({
         where: { id: existing.id },
         include: { city: true, category: true, media: true, partner: true },
       });
+      if (!updated) throw new NotFoundException('Experience not found');
+      return updated;
     });
   }
 
-  async submit(userId: string, id: string) {
+  async submit(userId: string, id: string): Promise<PartnerExperienceItem> {
     const partner = await this.partnerService.getOwnedPartnerOrThrow(userId);
 
-    const existing = await (this.prisma as any).place.findFirst({
+    const existing = await this.prisma.place.findFirst({
       where: { id, deletedAt: null, partnerId: partner.id },
       select: { id: true, status: true },
     });
     if (!existing) throw new NotFoundException('Experience not found');
-    if (existing.status !== 'draft') {
+    const currentStatus = existing.status as ExperienceStatus;
+    if (currentStatus !== ExperienceStatus.Draft) {
       throw new BadRequestException('Only draft experiences can be submitted');
     }
 
-    return await (this.prisma as any).place.update({
+    return await this.prisma.place.update({
       where: { id: existing.id },
       data: {
-        status: 'pending_review',
+        status: ExperienceStatus.PendingReview,
         isPublished: false,
         rejectionReason: null,
       },
@@ -137,5 +176,3 @@ export class PartnerExperiencesService {
     });
   }
 }
-
-

@@ -1,18 +1,40 @@
 import { Injectable } from '@nestjs/common';
+import { DbUserRole, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ListUsersQueryDto } from './dto/list-users.query.dto';
 import { UserRole } from '../../common/enums/user-role.enum';
+
+type AdminUserListItem = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    createdAt: true;
+    updatedAt: true;
+    email: true;
+    phone: true;
+    role: true;
+    verificationStatus: true;
+    isActive: true;
+    isSuspended: true;
+    suspendedUntil: true;
+    selectedCityId: true;
+  };
+}>;
 
 @Injectable()
 export class AdminUsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(query: ListUsersQueryDto) {
+  async list(query: ListUsersQueryDto): Promise<{
+    page: number;
+    limit: number;
+    total: number;
+    items: AdminUserListItem[];
+  }> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {
+    const where: Prisma.UserWhereInput = {
       deletedAt: null,
       ...(query.q
         ? {
@@ -38,7 +60,7 @@ export class AdminUsersService {
       selectedCityId: true,
     } as const;
 
-    const [items, total] = await Promise.all([
+    const [items, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({
         where,
         select,
@@ -52,10 +74,23 @@ export class AdminUsersService {
     return { page, limit, total, items };
   }
 
-  async updateRole(userId: string, role: UserRole) {
+  async updateRole(
+    userId: string,
+    role: UserRole,
+  ): Promise<
+    Prisma.UserGetPayload<{
+      select: {
+        id: true;
+        email: true;
+        phone: true;
+        role: true;
+        updatedAt: true;
+      };
+    }>
+  > {
     return await this.prisma.user.update({
       where: { id: userId },
-      data: { role: role as any },
+      data: { role: role as DbUserRole },
       select: {
         id: true,
         email: true,
@@ -66,7 +101,21 @@ export class AdminUsersService {
     });
   }
 
-  async suspend(userId: string, suspendedUntil?: string) {
+  async suspend(
+    userId: string,
+    suspendedUntil?: string,
+  ): Promise<
+    Prisma.UserGetPayload<{
+      select: {
+        id: true;
+        email: true;
+        phone: true;
+        isSuspended: true;
+        suspendedUntil: true;
+        updatedAt: true;
+      };
+    }>
+  > {
     return await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -84,7 +133,18 @@ export class AdminUsersService {
     });
   }
 
-  async unsuspend(userId: string) {
+  async unsuspend(userId: string): Promise<
+    Prisma.UserGetPayload<{
+      select: {
+        id: true;
+        email: true;
+        phone: true;
+        isSuspended: true;
+        suspendedUntil: true;
+        updatedAt: true;
+      };
+    }>
+  > {
     return await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -102,5 +162,3 @@ export class AdminUsersService {
     });
   }
 }
-
-

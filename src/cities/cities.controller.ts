@@ -36,5 +36,3 @@ export class CitiesController {
     return await this.citiesService.create(dto);
   }
 }
-
-

@@ -1,56 +1,68 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { DbUserRole, Prisma, User } from '@prisma/client';
 import { UserRole } from '../common/enums/user-role.enum';
 import { PrismaService } from '../prisma/prisma.service';
+
+const authStatusSelect = {
+  id: true,
+  deletedAt: true,
+  isActive: true,
+  isSuspended: true,
+  suspendedUntil: true,
+  role: true,
+} as const;
+
+const meSelect = {
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  email: true,
+  phone: true,
+  role: true,
+  verificationStatus: true,
+  isActive: true,
+  isSuspended: true,
+  suspendedUntil: true,
+  selectedCityId: true,
+  selectedCity: {
+    select: {
+      id: true,
+      name: true,
+      heroImageUrl: true,
+      country: {
+        select: { id: true, name: true, isoCode2: true, isoCode3: true },
+      },
+    },
+  },
+} as const;
+
+type AuthStatus = Prisma.UserGetPayload<{ select: typeof authStatusSelect }>;
+type MeUser = Prisma.UserGetPayload<{ select: typeof meSelect }>;
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private readonly meSelect = {
-    id: true,
-    createdAt: true,
-    updatedAt: true,
-    email: true,
-    phone: true,
-    role: true,
-    verificationStatus: true,
-    isActive: true,
-    isSuspended: true,
-    suspendedUntil: true,
-    selectedCityId: true,
-    selectedCity: {
-      select: {
-        id: true,
-        name: true,
-        heroImageUrl: true,
-        country: { select: { id: true, name: true, isoCode2: true, isoCode3: true } },
-      },
-    },
-  } as const;
-
-  async findByEmail(email: string) {
+  async findByEmail(email: string): Promise<User | null> {
     return await this.prisma.user.findUnique({ where: { email } });
   }
 
-  async findByPhone(phone: string) {
+  async findByPhone(phone: string): Promise<User | null> {
     return await this.prisma.user.findUnique({ where: { phone } });
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<User | null> {
     return await this.prisma.user.findUnique({ where: { id } });
   }
 
-  async getAuthStatusById(id: string) {
+  async getAuthStatusById(id: string): Promise<AuthStatus | null> {
     return await this.prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        deletedAt: true,
-        isActive: true,
-        isSuspended: true,
-        suspendedUntil: true,
-        role: true,
-      },
+      select: authStatusSelect,
     });
   }
 
@@ -58,14 +70,14 @@ export class UsersService {
     email?: string;
     phone?: string;
     passwordHash: string;
-  }) {
+  }): Promise<User> {
     return await this.prisma.user.create({
       data: {
         email: input.email ?? null,
         phone: input.phone ?? null,
         passwordHash: input.passwordHash,
         refreshTokenHash: null,
-        role: UserRole.Tourist as any,
+        role: UserRole.Tourist as DbUserRole,
       },
     });
   }
@@ -77,10 +89,10 @@ export class UsersService {
     });
   }
 
-  async getMe(userId: string) {
+  async getMe(userId: string): Promise<MeUser> {
     const user = await this.prisma.user.findFirst({
       where: { id: userId, deletedAt: null },
-      select: this.meSelect,
+      select: meSelect,
     });
     if (!user) throw new NotFoundException('User not found');
     return user;
@@ -92,7 +104,8 @@ export class UsersService {
       where: { id: cityId, deletedAt: null },
       select: { id: true },
     });
-    if (!city) throw new BadRequestException('cityId must reference an existing city');
+    if (!city)
+      throw new BadRequestException('cityId must reference an existing city');
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -102,5 +115,3 @@ export class UsersService {
     return await this.getMe(userId);
   }
 }
-
-

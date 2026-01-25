@@ -10,5 +10,3 @@ export class UpdateUserRoleDto {
   @IsEnum(UserRole, { message: 'role must be a valid UserRole' })
   role!: UserRole;
 }
-
-
