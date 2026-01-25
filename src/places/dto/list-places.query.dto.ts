@@ -23,10 +23,11 @@ export class ListPlacesQueryDto {
   @IsUUID('4', { message: 'categoryId must be a UUID' })
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: 'coffee', description: 'Search by name (contains, case-insensitive)' })
+  @ApiPropertyOptional({
+    example: 'coffee',
+    description: 'Search by name (contains, case-insensitive)',
+  })
   @IsOptional()
   @IsString({ message: 'q must be a string' })
   q?: string;
 }
-
-

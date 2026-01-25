@@ -11,7 +11,7 @@ export class HealthController {
 
   @ApiOperation({ summary: 'Liveness check' })
   @Get()
-  async health() {
+  health(): { status: 'ok' } {
     return { status: 'ok' };
   }
 
@@ -22,5 +22,3 @@ export class HealthController {
     return { status: 'ok' };
   }
 }
-
-

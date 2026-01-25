@@ -3,5 +3,3 @@ export enum PartnerManagerRoleType {
   Analyst = 'analyst',
   ManagerAnalyst = 'manager_analyst',
 }
-
-

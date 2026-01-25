@@ -9,5 +9,3 @@ import { AdminUsersService } from './admin-users.service';
   providers: [AdminUsersService],
 })
 export class AdminUsersModule {}
-
-

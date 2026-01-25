@@ -8,8 +8,9 @@ export class SuspendUserDto {
       'Optional ISO timestamp. If provided, user is suspended until this time. If omitted, suspension is indefinite.',
   })
   @IsOptional()
-  @IsDateString({}, { message: 'suspendedUntil must be a valid ISO date string' })
+  @IsDateString(
+    {},
+    { message: 'suspendedUntil must be a valid ISO date string' },
+  )
   suspendedUntil?: string;
 }
-
-

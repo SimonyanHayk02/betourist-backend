@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { IsInt } from 'class-validator';
+import { ExperienceStatus } from '../../common/enums/experience-status.enum';
 
 const EXPERIENCE_STATUSES = [
   'draft',
@@ -27,14 +28,13 @@ export class ListPartnerExperiencesQueryDto {
   limit?: number;
 
   @ApiPropertyOptional({
-    description: 'Filter by status (draft, pending_review, published, unpublished)',
+    description:
+      'Filter by status (draft, pending_review, published, unpublished)',
     example: 'draft',
     enum: EXPERIENCE_STATUSES,
   })
   @IsOptional()
   @IsString()
   @IsIn(EXPERIENCE_STATUSES)
-  status?: string;
+  status?: ExperienceStatus;
 }
-
-

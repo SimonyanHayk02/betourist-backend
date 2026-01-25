@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -21,7 +25,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: JwtAccessTokenPayload) {
+  async validate(
+    payload: JwtAccessTokenPayload,
+  ): Promise<{ id: string; role: string }> {
     const status = await this.usersService.getAuthStatusById(payload.sub);
     if (!status || status.deletedAt) {
       throw new UnauthorizedException();
@@ -36,7 +42,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         throw new ForbiddenException('User is suspended');
       }
       const until = new Date(status.suspendedUntil);
-      if (Number.isFinite(until.getTime()) && until.getTime() > Date.now()) {
+      if (!Number.isFinite(until.getTime()) || until.getTime() > Date.now()) {
         throw new ForbiddenException('User is suspended');
       }
     }
@@ -45,5 +51,3 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     return { id: status.id, role: status.role };
   }
 }
-
-

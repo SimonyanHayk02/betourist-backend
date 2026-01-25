@@ -48,8 +48,13 @@ import { JwtRefreshAuthGuard } from './guards/jwt-refresh-auth.guard';
     RolesGuard,
     AuthService,
   ],
-  exports: [JwtModule, PassportModule, JwtAuthGuard, JwtRefreshAuthGuard, RolesGuard, AuthService],
+  exports: [
+    JwtModule,
+    PassportModule,
+    JwtAuthGuard,
+    JwtRefreshAuthGuard,
+    RolesGuard,
+    AuthService,
+  ],
 })
 export class AuthModule {}
-
-

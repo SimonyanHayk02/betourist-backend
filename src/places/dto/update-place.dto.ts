@@ -28,12 +28,17 @@ export class UpdatePlaceDto {
     description: 'Set to a UUID to assign category, or null to remove category',
   })
   @IsOptional()
-  @ValidateIf((o: UpdatePlaceDto) => o.categoryId !== null && o.categoryId !== undefined)
+  @ValidateIf(
+    (o: UpdatePlaceDto) => o.categoryId !== null && o.categoryId !== undefined,
+  )
   @IsUUID('4', { message: 'categoryId must be a UUID' })
   categoryId?: string | null;
 
   @ApiPropertyOptional({
-    example: ['https://cdn.example.com/places/1.jpg', 'https://cdn.example.com/places/2.jpg'],
+    example: [
+      'https://cdn.example.com/places/1.jpg',
+      'https://cdn.example.com/places/2.jpg',
+    ],
     description:
       'If provided, replaces all media for the place and sets sortOrder by array index. Can be empty [] to clear.',
   })
@@ -42,5 +47,3 @@ export class UpdatePlaceDto {
   @IsUrl({}, { each: true, message: 'each mediaUrls item must be a valid URL' })
   mediaUrls?: string[];
 }
-
-

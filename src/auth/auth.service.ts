@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
+import { User } from '@prisma/client';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from '../users/dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -141,7 +142,7 @@ export class AuthService {
     await this.usersService.setRefreshTokenHash(userId, refreshTokenHash);
   }
 
-  private assertUserCanAuthenticate(user: any) {
+  private assertUserCanAuthenticate(user: User) {
     if (user.deletedAt) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -153,12 +154,10 @@ export class AuthService {
         throw new ForbiddenException('User is suspended');
       }
       const until = new Date(user.suspendedUntil);
-      if (Number.isFinite(until.getTime()) && until.getTime() > Date.now()) {
+      if (!Number.isFinite(until.getTime()) || until.getTime() > Date.now()) {
         throw new ForbiddenException('User is suspended');
       }
       // If suspendedUntil is in the past, treat as not suspended (admin can optionally clear it).
     }
   }
 }
-
-

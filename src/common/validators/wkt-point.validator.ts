@@ -43,5 +43,3 @@ export function IsWktPoint(validationOptions?: ValidationOptions) {
     });
   };
 }
-
-

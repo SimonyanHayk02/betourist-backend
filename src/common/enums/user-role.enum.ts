@@ -9,5 +9,3 @@ export enum UserRole {
   PlatformAdmin = 'platform_admin',
   SuperAdmin = 'super_admin',
 }
-
-

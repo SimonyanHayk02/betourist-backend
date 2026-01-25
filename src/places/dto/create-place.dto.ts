@@ -38,5 +38,3 @@ export class CreatePlaceDto {
   @IsUrl({}, { each: true, message: 'each mediaUrls item must be a valid URL' })
   mediaUrls?: string[];
 }
-
-

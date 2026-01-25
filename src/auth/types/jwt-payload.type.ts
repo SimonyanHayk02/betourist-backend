@@ -4,5 +4,3 @@ export type JwtAccessTokenPayload = {
   sub: string;
   role: UserRole;
 };
-
-

@@ -8,5 +8,3 @@ import { CitiesController } from './cities.controller';
   exports: [CitiesService],
 })
 export class CitiesModule {}
-
-
