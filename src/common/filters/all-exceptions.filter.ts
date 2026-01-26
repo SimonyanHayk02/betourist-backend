@@ -142,15 +142,51 @@ export class AllExceptionsFilter implements ExceptionFilter {
       };
     }
 
+    // Foreign key constraint violation (P2003)
+    if (code === 'P2003') {
+      const msg = exceptionMessage;
+      const errors: string[] = [];
+      if (msg.includes('cityId') || msg.includes('places_cityId_fkey')) {
+        errors.push('cityId must reference an existing city');
+      }
+      if (msg.includes('categoryId') || msg.includes('places_categoryId_fkey')) {
+        errors.push('categoryId must reference an existing category');
+      }
+      if (msg.includes('countryId') || msg.includes('cities_countryId_fkey')) {
+        errors.push('countryId must reference an existing country');
+      }
+      if (msg.includes('partnerId') || msg.includes('places_partnerId_fkey')) {
+        errors.push('partnerId must reference an existing partner');
+      }
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Foreign key constraint failed',
+        errors: errors.length > 0 ? errors : ['Referenced resource does not exist'],
+      };
+    }
+
     // Raw query failures (Prisma wraps DB errors as P2010)
     if (code === 'P2010') {
       const msg = exceptionMessage;
       // Postgres foreign key violation (e.g. city.countryId references missing country)
       if (msg.includes('Code: `23503`')) {
+        const errors: string[] = [];
+        if (msg.includes('cityId') || msg.includes('places_cityId_fkey')) {
+          errors.push('cityId must reference an existing city');
+        }
+        if (msg.includes('categoryId') || msg.includes('places_categoryId_fkey')) {
+          errors.push('categoryId must reference an existing category');
+        }
+        if (msg.includes('countryId') || msg.includes('cities_countryId_fkey')) {
+          errors.push('countryId must reference an existing country');
+        }
+        if (msg.includes('partnerId') || msg.includes('places_partnerId_fkey')) {
+          errors.push('partnerId must reference an existing partner');
+        }
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           message: 'Foreign key constraint failed',
-          errors: ['countryId must reference an existing country'],
+          errors: errors.length > 0 ? errors : ['Referenced resource does not exist'],
         };
       }
       return {
